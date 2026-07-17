@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Letter Quest Basketball</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(#6ec6ff 0 48%,#d9a45c 48% 100%);min-height:100vh;overflow:hidden;color:#10233f}
+button{font:inherit}
+#app{max-width:560px;margin:auto;min-height:100vh;position:relative;background:linear-gradient(#6ec6ff 0 48%,#d9a45c 48% 100%);overflow:hidden}
+.topbar{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;padding:14px}
+.back{border:0;border-radius:14px;width:44px;height:44px;font-size:26px;background:#fff;color:#10233f;box-shadow:0 4px 10px #0002}
+.title{text-align:center}.title h1{margin:0;font-size:23px}.title p{margin:3px 0 0;font-size:13px}
+.coins{background:#fff;border-radius:999px;padding:10px 14px;font-weight:900;box-shadow:0 4px 10px #0002}
+.prompt{text-align:center;margin-top:2px}
+.prompt small{font-weight:900;text-transform:uppercase}
+.prompt .letter{font-size:68px;line-height:1;font-weight:1000;text-shadow:0 3px 0 #fff}
+.prompt button{margin-top:6px;border:0;border-radius:999px;background:#10233f;color:#fff;padding:9px 14px;font-weight:800}
+.court{position:absolute;left:0;right:0;top:165px;bottom:0}
+.cloud{position:absolute;background:#fff;border-radius:999px;opacity:.8}
+.cloud.c1{width:100px;height:30px;left:30px;top:22px}.cloud.c2{width:130px;height:36px;right:20px;top:55px}
+.crowd{position:absolute;left:0;right:0;top:160px;height:72px;background:repeating-linear-gradient(90deg,#253858 0 8px,#f05b5b 8px 16px,#ffd166 16px 24px,#3fb984 24px 32px);border-top:8px solid #d6dce5;border-bottom:8px solid #1d3557}
+.floor-lines{position:absolute;left:0;right:0;top:232px;bottom:0;background:
+linear-gradient(90deg,transparent 49.5%,#fff8 49.5% 50.5%,transparent 50.5%),
+linear-gradient(#d99b4b,#efc375)}
+.floor-lines:after{content:"";position:absolute;width:190px;height:95px;border:5px solid #fff8;border-radius:190px 190px 0 0;left:50%;transform:translateX(-50%);bottom:-5px}
+.hoop-zone{position:absolute;top:88px;width:44%;height:260px;border:0;background:transparent;z-index:4}
+.hoop-zone.left{left:2%}.hoop-zone.right{right:2%}
+.goal-letter{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:94px;height:94px;border-radius:24px;background:#fff;display:grid;place-items:center;font-size:58px;font-weight:1000;box-shadow:0 8px 16px #0003;border:5px solid #10233f}
+.backboard{position:absolute;top:112px;left:50%;transform:translateX(-50%);width:118px;height:76px;background:#eef8ff;border:7px solid #fff;box-shadow:0 4px 10px #0003}
+.backboard:after{content:"";position:absolute;width:42px;height:30px;border:4px solid #e44;left:50%;top:24px;transform:translateX(-50%)}
+.rim{position:absolute;top:187px;left:50%;transform:translateX(-50%);width:64px;height:12px;border:7px solid #f05a28;border-radius:50%}
+.net{position:absolute;top:199px;left:50%;transform:translateX(-50%);width:46px;height:46px;border-left:3px solid #fff;border-right:3px solid #fff;border-bottom:3px solid #fff;border-radius:0 0 24px 24px}
+.player{position:absolute;left:50%;bottom:48px;transform:translateX(-50%);width:90px;height:150px;z-index:5}
+.head{position:absolute;width:42px;height:42px;border-radius:50%;background:#8b5a2b;left:24px;top:0}
+.body{position:absolute;width:58px;height:70px;border-radius:18px 18px 8px 8px;background:#2447d8;left:16px;top:36px;border:4px solid #fff}
+.body:after{content:"7";position:absolute;color:#fff;font-size:30px;font-weight:900;left:50%;top:12px;transform:translateX(-50%)}
+.leg{position:absolute;width:18px;height:52px;background:#1f2937;top:98px;border-radius:10px}.leg.l{left:22px}.leg.r{right:22px}
+.arm{position:absolute;width:16px;height:60px;background:#8b5a2b;top:46px;border-radius:12px;transform-origin:top}.arm.l{left:8px;transform:rotate(18deg)}.arm.r{right:8px;transform:rotate(-18deg)}
+.ball{position:absolute;width:42px;height:42px;border-radius:50%;background:
+radial-gradient(circle at 35% 30%,#ffb14a 0 24%,#f27916 25% 100%);border:3px solid #4d2a0a;left:50%;bottom:156px;transform:translateX(-50%);z-index:8;box-shadow:0 4px 8px #0004}
+.ball:before,.ball:after{content:"";position:absolute;inset:5px;border:2px solid #4d2a0a;border-radius:50%}
+.ball:after{transform:rotate(90deg)}
+.message{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:#fff;border-radius:999px;padding:12px 20px;font-weight:900;box-shadow:0 6px 16px #0003;z-index:10;white-space:nowrap}
+.confetti{position:absolute;width:10px;height:18px;top:-30px;z-index:20;animation:fall 1.2s linear forwards}
+@keyframes fall{to{transform:translateY(700px) rotate(720deg);opacity:.2}}
+.shot-left{animation:shotLeft 1s cubic-bezier(.2,.7,.25,1) forwards}
+.shot-right{animation:shotRight 1s cubic-bezier(.2,.7,.25,1) forwards}
+@keyframes shotLeft{
+0%{left:50%;bottom:156px;transform:translateX(-50%) scale(1)}
+45%{left:25%;bottom:430px;transform:translateX(-50%) scale(.9)}
+82%{left:24%;bottom:300px;transform:translateX(-50%) scale(.78)}
+100%{left:24%;bottom:250px;transform:translateX(-50%) scale(.72)}
+}
+@keyframes shotRight{
+0%{left:50%;bottom:156px;transform:translateX(-50%) scale(1)}
+45%{left:75%;bottom:430px;transform:translateX(-50%) scale(.9)}
+82%{left:76%;bottom:300px;transform:translateX(-50%) scale(.78)}
+100%{left:76%;bottom:250px;transform:translateX(-50%) scale(.72)}
+}
+.correctGlow .goal-letter{background:#8ff0a4;animation:pop .5s ease}
+.wrongGlow .goal-letter{background:#ff9d9d;animation:shake .35s ease}
+@keyframes pop{50%{transform:translateX(-50%) scale(1.12)}}@keyframes shake{25%{transform:translateX(calc(-50% - 7px))}75%{transform:translateX(calc(-50% + 7px))}}
+.start-overlay{position:fixed;inset:0;background:#10233fee;display:grid;place-items:center;padding:24px;z-index:50}
+.start-card{background:#fff;border-radius:28px;padding:28px;text-align:center;max-width:390px}
+.start-card h2{font-size:34px;margin:8px}.start-card p{font-size:18px}
+.start-card button{width:100%;border:0;border-radius:18px;padding:16px;background:#f58220;color:white;font-weight:1000;font-size:20px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <button class="back" onclick="location.reload()">↻</button>
+    <div class="title"><h1>Basketball Letters</h1><p>Tap the correct hoop</p></div>
+    <div class="coins">⭐ <span id="coins">0</span></div>
+  </div>
+
+  <div class="prompt">
+    <small>Find the letter</small>
+    <div class="letter" id="target">A</div>
+    <button id="hear">🔊 Hear it</button>
+  </div>
+
+  <div class="court">
+    <div class="cloud c1"></div><div class="cloud c2"></div>
+    <div class="crowd"></div>
+    <div class="floor-lines"></div>
+
+    <button class="hoop-zone left" id="leftHoop">
+      <div class="goal-letter" id="leftLetter">A</div>
+      <div class="backboard"></div><div class="rim"></div><div class="net"></div>
+    </button>
+
+    <button class="hoop-zone right" id="rightHoop">
+      <div class="goal-letter" id="rightLetter">B</div>
+      <div class="backboard"></div><div class="rim"></div><div class="net"></div>
+    </button>
+
+    <div class="player">
+      <div class="head"></div><div class="body"></div>
+      <div class="arm l"></div><div class="arm r"></div>
+      <div class="leg l"></div><div class="leg r"></div>
+    </div>
+
+    <div class="ball" id="ball"></div>
+    <div class="message" id="message">Tap the correct hoop!</div>
+  </div>
+</div>
+
+<div class="start-overlay" id="startOverlay">
+  <div class="start-card">
+    <div style="font-size:70px">🏀</div>
+    <h2>Basketball Letters</h2>
+    <p>Listen for the letter, then tap the correct basketball goal.</p>
+    <button id="startBtn">Start Playing</button>
+  </div>
+</div>
+
+<script>
+let coins = Number(localStorage.getItem("bball_letter_coins") || 0);
+let target = "A";
+let locked = false;
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const $ = id => document.getElementById(id);
+
+function speak(text){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = .78;
+  u.pitch = 1.1;
+  speechSynthesis.speak(u);
+}
+function randLetter(){return letters[Math.floor(Math.random()*letters.length)]}
+function newRound(){
+  locked = false;
+  $("ball").className = "ball";
+  $("leftHoop").className = "hoop-zone left";
+  $("rightHoop").className = "hoop-zone right";
+  target = randLetter();
+  let wrong = randLetter();
+  while(wrong === target) wrong = randLetter();
+  const correctLeft = Math.random() < .5;
+  $("leftLetter").textContent = correctLeft ? target : wrong;
+  $("rightLetter").textContent = correctLeft ? wrong : target;
+  $("target").textContent = target;
+  $("message").textContent = "Tap the correct hoop!";
+  setTimeout(()=>speak("Find the letter " + target),300);
+}
+function confetti(){
+  const colors=["#ff4d4d","#ffd43b","#4dabf7","#69db7c","#b197fc"];
+  for(let i=0;i<28;i++){
+    const c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*100+"%";
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDelay=Math.random()*.25+"s";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),1500);
+  }
+}
+function choose(side){
+  if(locked) return;
+  const selected = side==="left" ? $("leftLetter").textContent : $("rightLetter").textContent;
+  const hoop = side==="left" ? $("leftHoop") : $("rightHoop");
+  if(selected !== target){
+    hoop.classList.add("wrongGlow");
+    $("message").textContent = "Good try — tap the other hoop!";
+    speak("Good try. Find " + target);
+    setTimeout(()=>hoop.classList.remove("wrongGlow"),500);
+    return;
+  }
+  locked = true;
+  hoop.classList.add("correctGlow");
+  $("ball").classList.add(side==="left" ? "shot-left" : "shot-right");
+  $("message").textContent = "Swish! Great job!";
+  setTimeout(()=>{
+    coins += 2;
+    localStorage.setItem("bball_letter_coins",coins);
+    $("coins").textContent=coins;
+    confetti();
+    speak("Swish! Great job! That is the letter " + target);
+  },800);
+  setTimeout(newRound,2200);
+}
+$("leftHoop").onclick=()=>choose("left");
+$("rightHoop").onclick=()=>choose("right");
+$("hear").onclick=()=>speak("Find the letter "+target);
+$("startBtn").onclick=()=>{
+  $("startOverlay").classList.add("hidden");
+  $("coins").textContent=coins;
+  newRound();
+};
+</script>
+</body>
+</html>
