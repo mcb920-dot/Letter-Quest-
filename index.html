@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#141a3a">
+<title>Letter Quest Basketball</title>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111936;font-family:Arial,Helvetica,sans-serif}
+#game{width:100%;height:100%}
+canvas{display:block;margin:auto}
+#loading{position:fixed;inset:0;display:grid;place-items:center;background:#111936;color:#fff;font-size:20px;font-weight:900;z-index:10}
+</style>
+</head>
+<body>
+<div id="loading">Loading Letter Quest…</div>
+<div id="game"></div>
+<script>
+const W=430,H=760;
+const LETTER_COLORS=[
+0xff6b6b,0x4dabf7,0xffd43b,0x69db7c,0xb197fc,0xff922b,
+0x38d9a9,0xf06595,0x74c0fc,0x94d82d,0xe599f7,0xff8787
+];
+
+function chooseWarmVoice(){
+  if(!("speechSynthesis" in window)) return null;
+  const voices=speechSynthesis.getVoices();
+  const preferred=["Samantha","Ava","Allison","Joelle","Tessa","Karen","Moira","Susan"];
+  for(const name of preferred){
+    const voice=voices.find(v=>v.name.includes(name)&&v.lang.startsWith("en"));
+    if(voice) return voice;
+  }
+  return voices.find(v=>v.lang==="en-US")||voices.find(v=>v.lang.startsWith("en"))||voices[0]||null;
+}
+
+function speakLetter(letter){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(`This is the letter ${letter}!`);
+  u.rate=.92;
+  u.pitch=1.32;
+  u.volume=1;
+  const voice=chooseWarmVoice();
+  if(voice) u.voice=voice;
+  speechSynthesis.speak(u);
+}
+
+class BasketballScene extends Phaser.Scene{
+  constructor(){super("basketball")}
+
+  create(){
+    document.getElementById("loading").style.display="none";
+    this.index=0;
+    this.locked=true;
+    this.coins=Number(localStorage.getItem("letterQuestCoins")||0);
+
+    this.drawArcade();
+    this.drawHUD();
+    this.createHoop();
+    this.createPlayer();
+    this.createBall();
+    this.createCelebration();
+    this.createStartOverlay();
+
+    if("speechSynthesis" in window){
+      speechSynthesis.onvoiceschanged=()=>chooseWarmVoice();
+    }
+  }
+
+  drawArcade(){
+    const g=this.add.graphics();
+
+    // Back wall
+    g.fillGradientStyle(0x12183b,0x12183b,0x222c63,0x222c63,1);
+    g.fillRect(0,0,W,H);
+
+    // Neon side walls
+    g.fillStyle(0x24376a,1);
+    g.fillTriangle(0,110,85,170,85,650);
+    g.fillTriangle(W,110,W-85,170,W-85,650);
+
+    g.lineStyle(8,0x34d9ff,.85);
+    g.lineBetween(0,110,85,170);
+    g.lineBetween(85,170,85,650);
+    g.lineBetween(W,110,W-85,170);
+    g.lineBetween(W-85,170,W-85,650);
+
+    g.lineStyle(5,0xff6b9a,.75);
+    g.lineBetween(17,145,65,180);
+    g.lineBetween(65,180,65,625);
+    g.lineBetween(W-17,145,W-65,180);
+    g.lineBetween(W-65,180,W-65,625);
+
+    // Floor lane
+    g.fillGradientStyle(0x2f91d6,0xe76d8c,0x2f91d6,0xe76d8c,1);
+    g.fillTriangle(85,650,W-85,650,W/2,260);
+    g.fillStyle(0x81d4fa,.45);
+    g.fillTriangle(85,650,W/2,650,W/2,260);
+    g.fillStyle(0xff8aa4,.45);
+    g.fillTriangle(W/2,650,W-85,650,W/2,260);
+
+    // Back wall panel
+    g.fillStyle(0x0e1435,1);
+    g.fillRoundedRect(72,94,W-144,185,22);
+    g.lineStyle(7,0x45e1ff,.75);
+    g.strokeRoundedRect(72,94,W-144,185,22);
+
+    // Floor rails
+    g.fillStyle(0x101632,1);
+    g.fillRoundedRect(46,620,78,95,16);
+    g.fillRoundedRect(W-124,620,78,95,16);
+    g.lineStyle(5,0xff637e,.8);
+    g.lineBetween(55,628,55,705);
+    g.lineBetween(W-55,628,W-55,705);
+
+    // Decorative stars
+    for(let i=0;i<22;i++){
+      const x=Phaser.Math.Between(20,W-20);
+      const y=Phaser.Math.Between(25,290);
+      g.fillStyle(0xffffff,Phaser.Math.FloatBetween(.15,.55));
+      g.fillCircle(x,y,Phaser.Math.Between(1,3));
+    }
+  }
+
+  drawHUD(){
+    this.add.text(W/2,28,"BASKETBALL LETTERS",{
+      fontFamily:"Arial",fontSize:"23px",fontStyle:"bold",color:"#ffffff",
+      stroke:"#101632",strokeThickness:5
+    }).setOrigin(.5);
+
+    this.add.text(W/2,60,"Tap the ball • Watch it swish",{
+      fontFamily:"Arial",fontSize:"14px",fontStyle:"bold",color:"#bfefff"
+    }).setOrigin(.5);
+
+    const coinBg=this.add.graphics();
+    coinBg.fillStyle(0xffffff,.95);
+    coinBg.fillRoundedRect(W-91,18,74,38,19);
+    this.coinText=this.add.text(W-54,37,`⭐ ${this.coins}`,{
+      fontFamily:"Arial",fontSize:"16px",fontStyle:"bold",color:"#172044"
+    }).setOrigin(.5);
+
+    this.messageBg=this.add.graphics().setDepth(60);
+    this.messageBg.fillStyle(0xffffff,.97);
+    this.messageBg.fillRoundedRect(95,H-58,240,42,21);
+    this.message=this.add.text(W/2,H-37,"Tap the basketball!",{
+      fontFamily:"Arial",fontSize:"17px",fontStyle:"bold",color:"#172044"
+    }).setOrigin(.5).setDepth(61);
+  }
+
+  createHoop(){
+    this.backboard=this.add.rectangle(W/2,184,144,90,0xeaf7ff,.95)
+      .setStrokeStyle(7,0xffffff).setDepth(8);
+    this.add.rectangle(W/2,201,52,35,0xffffff,0)
+      .setStrokeStyle(4,0xff5668).setDepth(9);
+
+    this.add.rectangle(W/2+60,318,12,210,0x6d7899).setDepth(3);
+    this.add.rectangle(W/2+60,425,110,16,0x4e5979).setDepth(3);
+
+    this.rimBack=this.add.ellipse(W/2,242,82,19,0xdd491f)
+      .setStrokeStyle(7,0xdd491f).setDepth(12);
+
+    this.net=this.add.graphics().setDepth(11);
+    this.drawNet(1,0);
+
+    this.rimFront=this.add.graphics().setDepth(25);
+    this.rimFront.lineStyle(7,0xff6b2c,1);
+    this.rimFront.beginPath();
+    this.rimFront.arc(W/2,244,41,0,Math.PI,false);
+    this.rimFront.strokePath();
+  }
+
+  drawNet(stretch=1,sway=0){
+    this.net.clear();
+    const top=251;
+    const bottom=313+(stretch-1)*34;
+    this.net.lineStyle(3,0xffffff,.94);
+    this.net.lineBetween(W/2-30,top,W/2-18+sway,bottom);
+    this.net.lineBetween(W/2+30,top,W/2+18+sway,bottom);
+    this.net.lineBetween(W/2-18+sway,bottom,W/2+18+sway,bottom);
+
+    for(let i=-24;i<=24;i+=12){
+      this.net.lineBetween(W/2+i,top+2,W/2+(i*.55)+sway,bottom);
+    }
+    for(let y=266;y<bottom;y+=13){
+      const taper=(y-top)/(bottom-top);
+      const width=29-(11*taper);
+      this.net.lineBetween(W/2-width+sway*taper,y,W/2+width+sway*taper,y);
+    }
+  }
+
+  createPlayer(){
+    this.player=this.add.container(W/2,570).setDepth(18);
+    const shadow=this.add.ellipse(0,118,90,20,0x000000,.22);
+    const leftLeg=this.add.rectangle(-18,74,19,66,0x172044).setOrigin(.5,0);
+    const rightLeg=this.add.rectangle(18,74,19,66,0x172044).setOrigin(.5,0);
+    const shoeL=this.add.ellipse(-20,143,38,15,0xffffff);
+    const shoeR=this.add.ellipse(20,143,38,15,0xffffff);
+    const torso=this.add.rectangle(0,18,70,88,0x6c5ce7).setStrokeStyle(4,0xffffff);
+    const stripe=this.add.rectangle(0,22,70,11,0x43d7ff);
+    const number=this.add.text(0,18,"7",{
+      fontFamily:"Arial",fontSize:"34px",fontStyle:"bold",color:"#ffffff"
+    }).setOrigin(.5);
+    this.leftArm=this.add.rectangle(-43,4,17,69,0x9a6234).setOrigin(.5,0).setAngle(20);
+    this.rightArm=this.add.rectangle(43,4,17,69,0x9a6234).setOrigin(.5,0).setAngle(-20);
+    const head=this.add.circle(0,-43,24,0x9a6234);
+    const hair=this.add.arc(0,-53,25,200,340,false,0x20243e);
+    this.player.add([shadow,leftLeg,rightLeg,shoeL,shoeR,torso,stripe,number,this.leftArm,this.rightArm,head,hair]);
+  }
+
+  createBall(){
+    this.ball=this.add.container(W/2,470).setDepth(24);
+
+    const shadow=this.add.circle(3,5,50,0x000000,.18);
+    const ballCircle=this.add.circle(0,0,49,0xf46b36).setStrokeStyle(4,0x54200f);
+    const gradient1=this.add.circle(-15,-16,17,0xffb85c,.88);
+    const gradient2=this.add.circle(16,20,20,0xc94725,.32);
+
+    this.ballLines=this.add.graphics();
+    this.ballLines.lineStyle(3,0x54200f,1);
+    this.ballLines.strokeCircle(0,0,39);
+    this.ballLines.lineBetween(-47,0,47,0);
+    this.ballLines.lineBetween(0,-47,0,47);
+    this.ballLines.beginPath();
+    this.ballLines.arc(-4,0,30,-1.25,1.25,false);
+    this.ballLines.strokePath();
+
+    this.ballLetter=this.add.text(0,1,"A",{
+      fontFamily:"Arial",fontSize:"47px",fontStyle:"bold",color:"#ffffff",
+      stroke:"#7f2c18",strokeThickness:6
+    }).setOrigin(.5);
+
+    this.ball.add([shadow,ballCircle,gradient1,gradient2,this.ballLines,this.ballLetter]);
+    this.ball.setSize(105,105).setInteractive({useHandCursor:true});
+    this.ball.on("pointerdown",()=>this.shoot());
+  }
+
+  createCelebration(){
+    this.celebrationShade=this.add.rectangle(W/2,H/2,W,H,0xffffff,0)
+      .setDepth(70).setVisible(false);
+
+    this.bubbleShadow=this.add.text(W/2+7,H/2+11,"A",{
+      fontFamily:"Arial Rounded MT Bold, Arial",fontSize:"184px",fontStyle:"bold",
+      color:"#7a2946",stroke:"#ffffff",strokeThickness:14
+    }).setOrigin(.5).setDepth(81).setAlpha(0);
+
+    this.bubbleLetter=this.add.text(W/2,H/2,"A",{
+      fontFamily:"Arial Rounded MT Bold, Arial",fontSize:"184px",fontStyle:"bold",
+      color:"#ff6b6b",stroke:"#ffffff",strokeThickness:14
+    }).setOrigin(.5).setDepth(82).setAlpha(0);
+
+    this.sparkleRing=this.add.graphics().setDepth(79);
+  }
+
+  createStartOverlay(){
+    const dark=this.add.rectangle(W/2,H/2,W,H,0x101632,.93).setDepth(100);
+    const card=this.add.rectangle(W/2,H/2,350,340,0xffffff).setDepth(101);
+    const icon=this.add.text(W/2,H/2-112,"🏀",{fontSize:"72px"}).setOrigin(.5).setDepth(102);
+    const title=this.add.text(W/2,H/2-28,"Basketball Letters",{
+      fontFamily:"Arial",fontSize:"31px",fontStyle:"bold",color:"#172044"
+    }).setOrigin(.5).setDepth(102);
+    const body=this.add.text(W/2,H/2+44,"Tap the letter ball.\nWatch it go through the net.\nLearn A through Z in order.",{
+      fontFamily:"Arial",fontSize:"18px",fontStyle:"bold",align:"center",
+      color:"#4b5577",lineSpacing:8
+    }).setOrigin(.5).setDepth(102);
+    const btn=this.add.rectangle(W/2,H/2+131,270,58,0xff6b6b).setDepth(102).setInteractive();
+    const label=this.add.text(W/2,H/2+131,"START PLAYING",{
+      fontFamily:"Arial",fontSize:"19px",fontStyle:"bold",color:"#ffffff"
+    }).setOrigin(.5).setDepth(103);
+
+    btn.on("pointerdown",()=>{
+      [dark,card,icon,title,body,btn,label].forEach(x=>x.destroy());
+      this.prepareRound();
+    });
+  }
+
+  prepareRound(){
+    this.locked=false;
+    const letter=String.fromCharCode(65+(this.index%26));
+    const color=LETTER_COLORS[this.index%LETTER_COLORS.length];
+
+    this.ballLetter.setText(letter);
+    this.bubbleLetter.setText(letter).setColor("#"+color.toString(16).padStart(6,"0"));
+    this.bubbleShadow.setText(letter);
+
+    this.ball.setPosition(W/2,470).setScale(1).setAlpha(1).setAngle(0).setDepth(24);
+    this.player.setPosition(W/2,570).setScale(1);
+    this.leftArm.setAngle(20);
+    this.rightArm.setAngle(-20);
+    this.message.setText(`Tap the ${letter} ball!`);
+  }
+
+  shoot(){
+    if(this.locked) return;
+    this.locked=true;
+    const letter=String.fromCharCode(65+(this.index%26));
+    this.message.setText("Here it goes!");
+
+    // Gather animation
+    this.tweens.add({
+      targets:this.player,y:588,scaleY:.94,duration:170,ease:"Sine.In",yoyo:true,
+      onComplete:()=>{
+        this.tweens.add({
+          targets:this.player,y:525,duration:270,ease:"Sine.Out",yoyo:true,hold:190
+        });
+        this.tweens.add({
+          targets:[this.leftArm,this.rightArm],angle:0,duration:230,ease:"Sine.Out"
+        });
+      }
+    });
+
+    // Front-facing shot arc
+    const path=new Phaser.Curves.CubicBezier(
+      new Phaser.Math.Vector2(W/2,470),
+      new Phaser.Math.Vector2(135,240),
+      new Phaser.Math.Vector2(300,128),
+      new Phaser.Math.Vector2(W/2,239)
+    );
+
+    const follow={t:0};
+    this.tweens.add({
+      targets:follow,t:1,duration:1080,ease:"Sine.InOut",
+      onUpdate:()=>{
+        const p=path.getPoint(follow.t);
+        this.ball.setPosition(p.x,p.y);
+
+        // Backspin: negative rotation rather than clockwise forward spin.
+        this.ball.angle-=12;
+
+        const scale=1-(follow.t*.34);
+        this.ball.setScale(scale);
+      },
+      onComplete:()=>this.swish(letter)
+    });
+  }
+
+  swish(letter){
+    this.ball.setDepth(10);
+    this.message.setText("SWISH!");
+
+    this.tweens.addCounter({
+      from:1,to:1.5,duration:210,yoyo:true,ease:"Sine.InOut",
+      onUpdate:t=>{
+        const progress=t.progress;
+        const sway=Math.sin(progress*Math.PI)*7;
+        this.drawNet(t.getValue(),sway);
+      }
+    });
+
+    this.tweens.add({
+      targets:this.ball,y:321,scale:.5,alpha:.9,duration:350,ease:"Quad.In",
+      onUpdate:()=>{this.ball.angle-=15},
+      onComplete:()=>{
+        this.ball.setAlpha(0);
+        this.cameras.main.shake(100,.003);
+        this.time.delayedCall(120,()=>this.celebrate(letter));
+      }
+    });
+  }
+
+  celebrate(letter){
+    this.coins++;
+    this.coinText.setText(`⭐ ${this.coins}`);
+    localStorage.setItem("letterQuestCoins",this.coins);
+
+    this.celebrationShade.setVisible(true).setAlpha(0);
+    this.tweens.add({targets:this.celebrationShade,alpha:.78,duration:180});
+
+    // Bubble letter starts near hoop and swirls toward viewer.
+    this.bubbleLetter
+      .setPosition(W/2,270).setScale(.12).setAlpha(1).setAngle(-28);
+    this.bubbleShadow
+      .setPosition(W/2+5,276).setScale(.12).setAlpha(.28).setAngle(-28);
+
+    const swirl={t:0};
+    this.tweens.add({
+      targets:swirl,t:1,duration:720,ease:"Back.Out",
+      onUpdate:()=>{
+        const t=swirl.t;
+        const angle=t*Math.PI*2.25;
+        const radius=(1-t)*48;
+        const x=W/2+Math.cos(angle)*radius;
+        const y=270+(H/2-270)*t+Math.sin(angle)*radius*.35;
+        const scale=.12+(1.02*t);
+
+        this.bubbleLetter.setPosition(x,y).setScale(scale).setAngle(-28+(28*t)+(Math.sin(angle)*5));
+        this.bubbleShadow.setPosition(x+7,y+11).setScale(scale).setAngle(this.bubbleLetter.angle);
+      },
+      onComplete:()=>{
+        this.tweens.add({
+          targets:[this.bubbleLetter,this.bubbleShadow],
+          scale:1.18,duration:130,yoyo:true,ease:"Sine.Out"
+        });
+      }
+    });
+
+    this.makeConfetti();
+    this.makeSparkles();
+    speakLetter(letter);
+
+    this.time.delayedCall(1800,()=>{
+      this.tweens.add({
+        targets:[this.bubbleLetter,this.bubbleShadow],
+        alpha:0,scale:1.28,y:H/2-35,duration:340,ease:"Sine.In",
+        onComplete:()=>{
+          this.celebrationShade.setVisible(false);
+          this.bubbleLetter.setY(H/2);
+          this.bubbleShadow.setY(H/2+11);
+          this.index=(this.index+1)%26; // A, B, C, D... in order
+          this.prepareRound();
+        }
+      });
+    });
+  }
+
+  makeConfetti(){
+    const colors=[0xff5d73,0xffd43b,0x4dabf7,0x69db7c,0xb197fc,0xff922b,0x38d9a9];
+    for(let i=0;i<72;i++){
+      const piece=this.add.rectangle(
+        W/2+Phaser.Math.Between(-24,24),
+        H/2+Phaser.Math.Between(-24,24),
+        Phaser.Math.Between(7,12),
+        Phaser.Math.Between(13,23),
+        Phaser.Utils.Array.GetRandom(colors)
+      ).setDepth(78).setAngle(Phaser.Math.Between(0,180));
+
+      const direction=Phaser.Math.FloatBetween(0,Math.PI*2);
+      const distance=Phaser.Math.Between(130,350);
+
+      this.tweens.add({
+        targets:piece,
+        x:piece.x+Math.cos(direction)*distance,
+        y:piece.y+Math.sin(direction)*distance+120,
+        angle:piece.angle+Phaser.Math.Between(360,950),
+        alpha:0,
+        duration:Phaser.Math.Between(900,1500),
+        ease:"Quad.Out",
+        onComplete:()=>piece.destroy()
+      });
+    }
+  }
+
+  makeSparkles(){
+    for(let i=0;i<18;i++){
+      const star=this.add.star(
+        W/2+Phaser.Math.Between(-90,90),
+        H/2+Phaser.Math.Between(-110,110),
+        5,4,10,0xffffff,1
+      ).setDepth(80).setScale(.2).setAlpha(0);
+
+      this.tweens.add({
+        targets:star,
+        scale:Phaser.Math.FloatBetween(.7,1.3),
+        alpha:1,
+        angle:180,
+        duration:260,
+        yoyo:true,
+        hold:Phaser.Math.Between(120,450),
+        onComplete:()=>star.destroy()
+      });
+    }
+  }
+}
+
+new Phaser.Game({
+  type:Phaser.AUTO,
+  parent:"game",
+  width:W,
+  height:H,
+  backgroundColor:"#111936",
+  scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},
+  render:{antialias:true,pixelArt:false,roundPixels:false},
+  scene:[BasketballScene]
+});
+</script>
+</body>
+</html>
