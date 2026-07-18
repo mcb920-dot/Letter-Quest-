@@ -29,34 +29,43 @@ export class LearnLettersScene extends Phaser.Scene {
 
   drawArcade() {
     const graphics = this.add.graphics();
-    graphics.fillGradientStyle(0x050a1d, 0x050a1d, 0x101c42, 0x101c42, 1);
+    graphics.fillGradientStyle(0x73cef4, 0x8fddf8, 0xdff5ff, 0xc9edff, 1);
     graphics.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-    graphics.fillStyle(0x0a1230, 0.98);
+    graphics.fillStyle(0x27558a, 0.96);
     graphics.fillRoundedRect(30, 92, BASE_WIDTH - 60, 790, 42);
-    graphics.lineStyle(8, 0x39d8f2, 0.8);
+    graphics.lineStyle(8, 0xffffff, 0.9);
     graphics.strokeRoundedRect(30, 92, BASE_WIDTH - 60, 790, 42);
-    graphics.lineStyle(4, 0xff5d73, 0.78);
+    graphics.lineStyle(5, 0xff6f78, 0.9);
     graphics.lineBetween(0, 245, 54, 290);
     graphics.lineBetween(54, 290, 54, 785);
     graphics.lineBetween(BASE_WIDTH, 245, BASE_WIDTH - 54, 290);
     graphics.lineBetween(BASE_WIDTH - 54, 290, BASE_WIDTH - 54, 785);
-    graphics.fillGradientStyle(0x5a3527, 0x40283b, 0x180f18, 0x120d19, 0.98);
+    graphics.fillGradientStyle(0xe9a45d, 0xd89055, 0x8c4f35, 0x75412f, 0.98);
     graphics.fillTriangle(42, 900, BASE_WIDTH - 42, 900, BASE_WIDTH / 2, 350);
-    graphics.fillStyle(0xe4a25e, 0.055);
+    graphics.fillStyle(0xffe0a4, 0.12);
     graphics.fillTriangle(88, 900, BASE_WIDTH / 2, 350, BASE_WIDTH / 2, 900);
-    graphics.lineStyle(2, 0xf1b56e, 0.16);
+    graphics.lineStyle(2, 0xffe0ad, 0.3);
     for (let y = 505; y <= 900; y += 58) {
       const halfWidth = Phaser.Math.Linear(54, 230, (y - 350) / 550);
       graphics.lineBetween(BASE_WIDTH / 2 - halfWidth, y, BASE_WIDTH / 2 + halfWidth, y);
     }
-    graphics.lineStyle(2, 0xf7c587, 0.12);
+    graphics.lineStyle(2, 0x7d422f, 0.2);
     for (let x = 92; x <= BASE_WIDTH - 92; x += 58) graphics.lineBetween(BASE_WIDTH / 2, 350, x, 900);
-    graphics.lineStyle(4, 0xffd39b, 0.28);
+    graphics.lineStyle(4, 0xfff0c9, 0.45);
     graphics.lineBetween(BASE_WIDTH / 2, 430, 160, 900);
     graphics.lineBetween(BASE_WIDTH / 2, 430, BASE_WIDTH - 160, 900);
     for (let i = 0; i < 42; i += 1) {
-      graphics.fillStyle(0xffffff, Phaser.Math.FloatBetween(0.08, 0.42));
+      const dotColors = [0xffffff, 0xffd95a, 0xff8290, 0x73e5d1];
+      graphics.fillStyle(Phaser.Utils.Array.GetRandom(dotColors), Phaser.Math.FloatBetween(0.12, 0.48));
       graphics.fillCircle(Phaser.Math.Between(20, BASE_WIDTH - 20), Phaser.Math.Between(95, 470), Phaser.Math.Between(1, 4));
+    }
+
+    // Original kid-friendly gym pennants.
+    const pennantColors = [0xff6f78, 0xffd95a, 0x73e5d1, 0x9a8cff];
+    for (let index = 0; index < 7; index += 1) {
+      const x = 76 + index * 65;
+      graphics.fillStyle(pennantColors[index % pennantColors.length], 0.9);
+      graphics.fillTriangle(x, 120, x + 34, 120, x + 17, 146);
     }
   }
 
@@ -66,7 +75,7 @@ export class LearnLettersScene extends Phaser.Scene {
         Phaser.Math.Between(45, BASE_WIDTH - 45),
         Phaser.Math.Between(115, 620),
         Phaser.Math.FloatBetween(1.2, 3.2),
-        index % 3 === 0 ? 0xff8a72 : 0xaeefff,
+        index % 3 === 0 ? 0xffd95a : 0xffffff,
         Phaser.Math.FloatBetween(0.08, 0.24),
       ).setDepth(5);
       this.tweens.add({
@@ -80,7 +89,7 @@ export class LearnLettersScene extends Phaser.Scene {
       });
     }
     const vignette = this.add.graphics().setDepth(55);
-    vignette.fillStyle(0x000000, 0.13);
+    vignette.fillStyle(0x173b67, 0.07);
     vignette.fillRect(0, 0, 20, BASE_HEIGHT);
     vignette.fillRect(BASE_WIDTH - 20, 0, 20, BASE_HEIGHT);
     vignette.fillRect(0, 0, BASE_WIDTH, 12);
@@ -280,9 +289,9 @@ export class LearnLettersScene extends Phaser.Scene {
 
   advanceBallSpin(speed = 1) {
     this.spinElapsed += this.game.loop.delta * speed;
-    if (this.spinElapsed < 42) return;
-    const steps = Math.max(1, Math.floor(this.spinElapsed / 42));
-    this.spinElapsed %= 42;
+    if (this.spinElapsed < 96) return;
+    const steps = Math.max(1, Math.floor(this.spinElapsed / 96));
+    this.spinElapsed %= 96;
     this.spinFrame = (this.spinFrame - steps + BASKETBALL_SPIN_FRAMES * 2) % BASKETBALL_SPIN_FRAMES;
     this.ballSeams.setTexture(`basketballSeams${this.spinFrame}`);
   }
@@ -318,7 +327,7 @@ export class LearnLettersScene extends Phaser.Scene {
       targets: this.ball, y: 132, scale: 0.51, duration: 790, ease: "Cubic.Out",
       onUpdate: () => {
         this.ball.x = BASE_WIDTH / 2;
-        this.advanceBallSpin(0.82);
+        this.advanceBallSpin(0.68);
       },
       onComplete: () => {
         this.time.delayedCall(70, () => {
@@ -328,7 +337,7 @@ export class LearnLettersScene extends Phaser.Scene {
             targets: this.ball, y: 307, scale: 0.5, duration: 575, ease: "Cubic.In",
             onUpdate: () => {
               this.ball.x = BASE_WIDTH / 2;
-              this.advanceBallSpin(0.95);
+              this.advanceBallSpin(0.76);
             },
             onComplete: () => this.swish(letter),
           });
@@ -348,26 +357,25 @@ export class LearnLettersScene extends Phaser.Scene {
       targets: this.ball, y: 410, scale: 0.48, duration: 185, ease: "Quad.In",
       onUpdate: () => {
         this.ball.x = BASE_WIDTH / 2;
-        this.advanceBallSpin(1.08);
+        this.advanceBallSpin(0.42);
       },
       onComplete: () => {
         this.tweens.add({
           targets: this.ball, y: 478, scale: 0.46, duration: 190, ease: "Quad.In",
           onUpdate: () => {
             this.ball.x = BASE_WIDTH / 2;
-            this.advanceBallSpin(1.15);
+            this.advanceBallSpin(0.28);
           },
           onComplete: () => {
             this.ball.setDepth(22);
             this.animateNetState("narrow", 145);
             this.tweens.add({
               targets: this.ball, y: 565, scale: 0.49, duration: 225, ease: "Quad.In",
-              onUpdate: () => this.advanceBallSpin(1.22),
+              onUpdate: () => this.advanceBallSpin(0.12),
               onComplete: () => {
                 this.animateNetState("snap", 140, () => this.animateNetState("rest", 230));
                 this.tweens.add({
                   targets: this.ball, y: 615, alpha: 0, duration: 150, ease: "Quad.In",
-                  onUpdate: () => this.advanceBallSpin(1.22),
                   onComplete: () => {
                     this.time.delayedCall(65, () => this.celebrate(letter));
                   },
