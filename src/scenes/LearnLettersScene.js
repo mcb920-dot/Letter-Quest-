@@ -62,11 +62,7 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   createHUD() {
-    this.add.text(BASE_WIDTH / 2, 123, "BASKETBALL LETTERS", {
-      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "28px", fontStyle: "bold", color: "#ffcc38",
-      stroke: "#7b2619", strokeThickness: 8, letterSpacing: 1,
-      shadow: { offsetX: 0, offsetY: 4, color: "#000000", blur: 7, fill: true },
-    }).setOrigin(0.5);
+    this.add.image(BASE_WIDTH / 2, 120, "basketballLettersLogo").setDisplaySize(390, 195).setDepth(3);
     ["LETTER", "LEARN", "STARS"].forEach((label, index) => {
       this.add.text(140 + index * 130, 218, label, {
         fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "12px", fontStyle: "bold", color: "#eef7ff",
@@ -322,25 +318,19 @@ export class LearnLettersScene extends Phaser.Scene {
     this.audioSystem.playEffect("tap");
     this.message.setText("Here it goes!");
     this.ball.setX(BASE_WIDTH / 2);
-    this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 720, ease: "Sine.Out" });
-    const shot = { progress: 0 };
-    let enteredHoop = false;
+    this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 750, ease: "Sine.Out" });
+    // Two continuous phases model a real shot in screen space: launch beside the goal, then descend through it.
     this.tweens.add({
-      targets: shot, progress: 1, duration: 720, ease: "Linear",
-      onUpdate: () => {
-        const t = shot.progress;
-        const inverse = 1 - t;
-        // A compact arcade shot: nearly straight, with only a subtle natural drift and apex.
-        this.ball.x = BASE_WIDTH / 2 + Math.sin(Math.PI * t) * 18;
-        this.ball.y = inverse * inverse * 770 + 2 * inverse * t * 430 + t * t * 471;
-        this.ball.setScale(Phaser.Math.Linear(1, 0.5, t));
-        this.advanceBallSpin(0.9);
-        if (!enteredHoop && t >= 0.97) {
-          enteredHoop = true;
-          this.animateNetState("open", 150);
-        }
+      targets: this.ball, x: 360, y: 405, scale: 0.55, duration: 520, ease: "Quad.Out",
+      onUpdate: () => this.advanceBallSpin(0.85),
+      onComplete: () => {
+        this.animateNetState("open", 150);
+        this.tweens.add({
+          targets: this.ball, x: BASE_WIDTH / 2, y: 471, scale: 0.5, duration: 230, ease: "Quad.In",
+          onUpdate: () => this.advanceBallSpin(0.7),
+          onComplete: () => this.swish(letter),
+        });
       },
-      onComplete: () => this.swish(letter),
     });
   }
 

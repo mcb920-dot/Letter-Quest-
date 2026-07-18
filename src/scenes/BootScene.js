@@ -9,6 +9,7 @@ export class BootScene extends Phaser.Scene {
 
   preload() {
     this.load.image("premiumMenu", "/assets/ui/premium-menu.png");
+    this.load.image("basketballLettersLogo", "/assets/ui/basketball-letters-logo.png");
     this.load.image("rescueArcadeCourt", "/assets/court/rescue-arcade-cabinet.png");
     this.load.image("hoopArcadeCourt", "/assets/court/hoop-arcade-cabinet.png");
     this.load.image("premiumBasketball", "/assets/basketball/premium-basketball.png");
