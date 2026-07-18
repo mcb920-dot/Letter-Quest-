@@ -204,8 +204,6 @@ export class LearnLettersScene extends Phaser.Scene {
     reflection.fillStyle(0xffffff, 0.06);
     reflection.fillTriangle(BASE_WIDTH / 2 + 34, 168, BASE_WIDTH / 2 + 102, 168, BASE_WIDTH / 2 + 72, 286);
     this.add.rectangle(BASE_WIDTH / 2, 252, 72, 48, 0xffffff, 0).setStrokeStyle(6, 0xff6b64).setDepth(9);
-    this.add.rectangle(BASE_WIDTH / 2 + 101, 466, 17, 414, 0x172238).setDepth(3);
-    this.add.rectangle(BASE_WIDTH / 2 + 101, 678, 162, 20, 0x172238).setDepth(3);
     this.add.ellipse(BASE_WIDTH / 2, 313, 121, 31, 0x2a0b06, 0.42).setDepth(11);
     this.rearRim = this.add.graphics().setDepth(12);
     this.rearRim.lineStyle(12, 0xd7431b, 1);
@@ -359,27 +357,26 @@ export class LearnLettersScene extends Phaser.Scene {
     this.audioSystem.playEffect("tap");
     this.message.setText("Here it goes!");
     this.ball.setX(BASE_WIDTH / 2);
-    this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 790, ease: "Sine.Out" });
+    this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 760, ease: "Sine.Out" });
+    const shot = { progress: 0 };
+    let enteredHoop = false;
     this.tweens.add({
-      targets: this.ball, y: 132, scale: 0.51, duration: 790, ease: "Cubic.Out",
+      targets: shot, progress: 1, duration: 760, ease: "Linear",
       onUpdate: () => {
+        const t = shot.progress;
+        const inverse = 1 - t;
         this.ball.x = BASE_WIDTH / 2;
-        this.advanceBallSpin(0.68);
-      },
-      onComplete: () => {
-        this.time.delayedCall(70, () => {
+        // One uninterrupted arc from the child's hand directly into the rim.
+        this.ball.y = inverse * inverse * 748 + 2 * inverse * t * 20 + t * t * 307;
+        this.ball.setScale(Phaser.Math.Linear(1, 0.5, t));
+        this.advanceBallSpin(0.42);
+        if (!enteredHoop && t >= 0.82) {
+          enteredHoop = true;
           this.ball.setDepth(18);
-          this.time.delayedCall(300, () => this.animateNetState("open", 190));
-          this.tweens.add({
-            targets: this.ball, y: 307, scale: 0.5, duration: 575, ease: "Cubic.In",
-            onUpdate: () => {
-              this.ball.x = BASE_WIDTH / 2;
-              this.advanceBallSpin(0.76);
-            },
-            onComplete: () => this.swish(letter),
-          });
-        });
+          this.animateNetState("open", 150);
+        }
       },
+      onComplete: () => this.swish(letter),
     });
   }
 
