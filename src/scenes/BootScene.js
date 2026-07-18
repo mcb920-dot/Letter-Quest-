@@ -7,6 +7,10 @@ export class BootScene extends Phaser.Scene {
     super("BootScene");
   }
 
+  preload() {
+    this.load.image("premiumMenu", "/assets/ui/premium-menu.png");
+  }
+
   create() {
     createBasketballTexture(this);
     createSoftGlowTexture(this);

@@ -89,7 +89,7 @@ export class AudioSystem {
   async playLetter(letter) {
     const path = `/audio/letters/${letter.toUpperCase()}.mp3`;
     if (await this.playFile(path)) return;
-    this.speak(letter.toLowerCase());
+    this.speak(`${letter.toLowerCase()}!`);
   }
 
   pickVoice() {
@@ -110,8 +110,8 @@ export class AudioSystem {
     if (this.muted || !this.synthesis || !("SpeechSynthesisUtterance" in window)) return;
     this.synthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1.24;
+    utterance.rate = 0.94;
+    utterance.pitch = 1.38;
     utterance.volume = 1;
     const voice = this.pickVoice();
     if (voice) utterance.voice = voice;

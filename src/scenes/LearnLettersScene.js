@@ -26,27 +26,27 @@ export class LearnLettersScene extends Phaser.Scene {
 
   drawArcade() {
     const graphics = this.add.graphics();
-    graphics.fillGradientStyle(0x0c1130, 0x0c1130, 0x1d2b66, 0x1d2b66, 1);
+    graphics.fillGradientStyle(0x050a1d, 0x050a1d, 0x101c42, 0x101c42, 1);
     graphics.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-    graphics.fillStyle(0x11183e, 1);
-    graphics.fillRoundedRect(58, 102, BASE_WIDTH - 116, 610, 40);
-    graphics.lineStyle(10, 0x3edff4, 0.95);
-    graphics.strokeRoundedRect(58, 102, BASE_WIDTH - 116, 610, 40);
-    graphics.lineStyle(6, 0xff6f9f, 0.8);
-    graphics.lineBetween(18, 205, 84, 250);
-    graphics.lineBetween(84, 250, 84, 728);
-    graphics.lineBetween(BASE_WIDTH - 18, 205, BASE_WIDTH - 84, 250);
-    graphics.lineBetween(BASE_WIDTH - 84, 250, BASE_WIDTH - 84, 728);
-    graphics.fillGradientStyle(0x3ca8df, 0xea86a5, 0x225f9f, 0xa83d76, 1);
-    graphics.fillTriangle(92, 760, BASE_WIDTH - 92, 760, BASE_WIDTH / 2, 300);
-    graphics.fillStyle(0xffffff, 0.09);
-    graphics.fillTriangle(92, 760, BASE_WIDTH / 2, 760, BASE_WIDTH / 2, 300);
-    graphics.fillStyle(0x0d1230, 1);
-    graphics.fillRoundedRect(34, 700, 112, 165, 24);
-    graphics.fillRoundedRect(BASE_WIDTH - 146, 700, 112, 165, 24);
-    graphics.fillStyle(0xff607e, 0.9);
-    graphics.fillRoundedRect(48, 720, 9, 112, 5);
-    graphics.fillRoundedRect(BASE_WIDTH - 57, 720, 9, 112, 5);
+    graphics.fillStyle(0x0a1230, 0.98);
+    graphics.fillRoundedRect(30, 92, BASE_WIDTH - 60, 790, 42);
+    graphics.lineStyle(8, 0x39d8f2, 0.8);
+    graphics.strokeRoundedRect(30, 92, BASE_WIDTH - 60, 790, 42);
+    graphics.lineStyle(4, 0xff5d73, 0.78);
+    graphics.lineBetween(0, 245, 54, 290);
+    graphics.lineBetween(54, 290, 54, 785);
+    graphics.lineBetween(BASE_WIDTH, 245, BASE_WIDTH - 54, 290);
+    graphics.lineBetween(BASE_WIDTH - 54, 290, BASE_WIDTH - 54, 785);
+    graphics.fillGradientStyle(0x173966, 0x351d50, 0x07152d, 0x120d2a, 0.96);
+    graphics.fillTriangle(42, 900, BASE_WIDTH - 42, 900, BASE_WIDTH / 2, 350);
+    graphics.lineStyle(2, 0x58cfee, 0.2);
+    for (let y = 540; y <= 900; y += 72) {
+      const halfWidth = Phaser.Math.Linear(54, 230, (y - 350) / 550);
+      graphics.lineBetween(BASE_WIDTH / 2 - halfWidth, y, BASE_WIDTH / 2 + halfWidth, y);
+    }
+    graphics.lineStyle(3, 0xff6f86, 0.22);
+    graphics.lineBetween(BASE_WIDTH / 2, 350, 150, 900);
+    graphics.lineBetween(BASE_WIDTH / 2, 350, BASE_WIDTH - 150, 900);
     for (let i = 0; i < 42; i += 1) {
       graphics.fillStyle(0xffffff, Phaser.Math.FloatBetween(0.08, 0.42));
       graphics.fillCircle(Phaser.Math.Between(20, BASE_WIDTH - 20), Phaser.Math.Between(95, 470), Phaser.Math.Between(1, 4));
@@ -90,10 +90,12 @@ export class LearnLettersScene extends Phaser.Scene {
 
   createHoop() {
     // Backboard and support are the rear-most hoop elements.
-    this.add.rectangle(BASE_WIDTH / 2, 228, 188, 116, 0xeaf7ff, 0.98).setStrokeStyle(10, 0xffffff).setDepth(8);
-    this.add.rectangle(BASE_WIDTH / 2, 250, 68, 45, 0xffffff, 0).setStrokeStyle(6, 0xff5f73).setDepth(9);
-    this.add.rectangle(BASE_WIDTH / 2 + 80, 430, 16, 360, 0x6c789b).setDepth(3);
-    this.add.rectangle(BASE_WIDTH / 2 + 80, 616, 154, 22, 0x4b5675).setDepth(3);
+    this.add.rectangle(BASE_WIDTH / 2 + 9, 238, 218, 142, 0x020617, 0.52).setDepth(7);
+    this.add.rectangle(BASE_WIDTH / 2, 228, 218, 142, 0x617aa4, 0.38).setStrokeStyle(9, 0xeef8ff, 0.95).setDepth(8);
+    this.add.rectangle(BASE_WIDTH / 2, 228, 195, 119, 0x86a7c5, 0.12).setStrokeStyle(2, 0xaeeeff, 0.34).setDepth(8);
+    this.add.rectangle(BASE_WIDTH / 2, 252, 72, 48, 0xffffff, 0).setStrokeStyle(6, 0xff6b64).setDepth(9);
+    this.add.rectangle(BASE_WIDTH / 2 + 91, 452, 14, 390, 0x263552).setDepth(3);
+    this.add.rectangle(BASE_WIDTH / 2 + 91, 650, 148, 17, 0x263552).setDepth(3);
     this.rearRim = this.add.graphics().setDepth(12);
     this.rearRim.lineStyle(9, 0xc93f20, 1);
     this.rearRim.strokeEllipse(BASE_WIDTH / 2, 307, 110, 25);
@@ -135,27 +137,34 @@ export class LearnLettersScene extends Phaser.Scene {
   drawNetShape(shape) {
     this.net.clear();
     const top = 315;
-    const upper = Phaser.Math.Linear(top, shape.bottom, 0.3);
-    const waist = Phaser.Math.Linear(top, shape.bottom, 0.67);
-    this.net.lineStyle(3, 0xffffff, 0.94);
-    for (let i = -5; i <= 5; i += 1) {
-      const ratio = i / 5;
-      this.net.beginPath();
-      this.net.moveTo(BASE_WIDTH / 2 + ratio * shape.topWidth, top);
-      this.net.lineTo(BASE_WIDTH / 2 + ratio * shape.upperWidth, upper);
-      this.net.lineTo(BASE_WIDTH / 2 + ratio * shape.waistWidth, waist);
-      this.net.lineTo(BASE_WIDTH / 2 + ratio * shape.bottomWidth, shape.bottom);
-      this.net.strokePath();
-    }
-    for (let row = 1; row <= 6; row += 1) {
-      const t = row / 7;
-      const y = Phaser.Math.Linear(top, shape.bottom, t);
+    const widthAt = (t) => {
       let width;
       if (t < 0.3) width = Phaser.Math.Linear(shape.topWidth, shape.upperWidth, t / 0.3);
       else if (t < 0.67) width = Phaser.Math.Linear(shape.upperWidth, shape.waistWidth, (t - 0.3) / 0.37);
       else width = Phaser.Math.Linear(shape.waistWidth, shape.bottomWidth, (t - 0.67) / 0.33);
-      this.net.lineBetween(BASE_WIDTH / 2 - width, y, BASE_WIDTH / 2 + width, y);
+      return width;
+    };
+    this.net.lineStyle(2.3, 0xf7fbff, 0.96);
+    const rows = 7;
+    const columns = 8;
+    for (let row = 0; row < rows; row += 1) {
+      const t1 = row / rows;
+      const t2 = (row + 1) / rows;
+      const y1 = Phaser.Math.Linear(top, shape.bottom, t1);
+      const y2 = Phaser.Math.Linear(top, shape.bottom, t2);
+      const width1 = widthAt(t1);
+      const width2 = widthAt(t2);
+      for (let column = 0; column <= columns; column += 1) {
+        const ratio = column / columns;
+        const x1 = Phaser.Math.Linear(BASE_WIDTH / 2 - width1, BASE_WIDTH / 2 + width1, ratio);
+        const leftRatio = Math.max(0, ratio - 0.5 / columns);
+        const rightRatio = Math.min(1, ratio + 0.5 / columns);
+        this.net.lineBetween(x1, y1, Phaser.Math.Linear(BASE_WIDTH / 2 - width2, BASE_WIDTH / 2 + width2, leftRatio), y2);
+        this.net.lineBetween(x1, y1, Phaser.Math.Linear(BASE_WIDTH / 2 - width2, BASE_WIDTH / 2 + width2, rightRatio), y2);
+      }
     }
+    this.net.lineStyle(3, 0xffffff, 0.9);
+    this.net.lineBetween(BASE_WIDTH / 2 - shape.bottomWidth, shape.bottom, BASE_WIDTH / 2 + shape.bottomWidth, shape.bottom);
   }
 
   animateNetState(state, duration, onComplete) {
