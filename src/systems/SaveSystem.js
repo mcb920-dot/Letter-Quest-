@@ -1,5 +1,6 @@
 const COINS_KEY = "letterQuestHDCoins";
 const PROGRESS_KEY = "letterQuestProgress";
+const NUMBER_PROGRESS_KEY = "basketballLearningNumberProgress";
 const MUTED_KEY = "letterQuestMuted";
 const THEME_KEY = "letterQuestTheme";
 const ACTIVITY_KEY = "basketballLearningActivity";
@@ -42,6 +43,15 @@ export const SaveSystem = {
   saveLetterIndex(index) {
     const safeIndex = ((Math.floor(Number(index) || 0) % 26) + 26) % 26;
     return writeNumber(PROGRESS_KEY, safeIndex);
+  },
+
+  getNumberIndex() {
+    return readNumber(NUMBER_PROGRESS_KEY, 0, { min: 0, max: 19 });
+  },
+
+  saveNumberIndex(index) {
+    const safeIndex = ((Math.floor(Number(index) || 0) % 20) + 20) % 20;
+    return writeNumber(NUMBER_PROGRESS_KEY, safeIndex);
   },
 
   getMuted() {
@@ -101,5 +111,6 @@ export const SaveSystem = {
   resetGameProgress() {
     this.saveCoins(0);
     this.saveLetterIndex(0);
+    this.saveNumberIndex(0);
   },
 };
