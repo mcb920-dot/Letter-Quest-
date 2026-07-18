@@ -274,15 +274,15 @@ export class LearnLettersScene extends Phaser.Scene {
   createBall() {
     this.ballShadow = this.add.ellipse(BASE_WIDTH / 2, 844, 142, 34, 0x000000, 0.3).setDepth(15);
     this.ball = this.add.container(BASE_WIDTH / 2, 770).setDepth(24);
-    this.ballSphere = this.add.image(0, 0, "premiumBasketball").setDisplaySize(160, 160);
+    this.ballSphere = this.add.image(0, 0, "premiumBasketball").setDisplaySize(138, 138);
     this.ballLetter = this.add.text(0, 2, "A", {
-      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "52px", fontStyle: "bold",
-      color: "#ffffff", stroke: "#7a2b17", strokeThickness: 7,
+      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "46px", fontStyle: "bold",
+      color: "#ffffff", stroke: "#7a2b17", strokeThickness: 6,
     }).setOrigin(0.5);
     this.ball.add([this.ballSphere, this.ballLetter]);
     this.spinFrame = 0;
     this.spinElapsed = 0;
-    this.ball.setSize(150, 150).setInteractive({ useHandCursor: true });
+    this.ball.setSize(138, 138).setInteractive({ useHandCursor: true });
     this.ball.on("pointerdown", () => this.shoot());
   }
 
@@ -322,17 +322,17 @@ export class LearnLettersScene extends Phaser.Scene {
     this.audioSystem.playEffect("tap");
     this.message.setText("Here it goes!");
     this.ball.setX(BASE_WIDTH / 2);
-    this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 900, ease: "Sine.Out" });
+    this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 720, ease: "Sine.Out" });
     const shot = { progress: 0 };
     let enteredHoop = false;
     this.tweens.add({
-      targets: shot, progress: 1, duration: 900, ease: "Linear",
+      targets: shot, progress: 1, duration: 720, ease: "Linear",
       onUpdate: () => {
         const t = shot.progress;
         const inverse = 1 - t;
-        // Curve away from center on ascent, then return over the rim from above.
-        this.ball.x = BASE_WIDTH / 2 - Math.sin(Math.PI * t) * 200;
-        this.ball.y = inverse * inverse * 770 + 2 * inverse * t * -150 + t * t * 471;
+        // A compact arcade shot: nearly straight, with only a subtle natural drift and apex.
+        this.ball.x = BASE_WIDTH / 2 + Math.sin(Math.PI * t) * 18;
+        this.ball.y = inverse * inverse * 770 + 2 * inverse * t * 430 + t * t * 471;
         this.ball.setScale(Phaser.Math.Linear(1, 0.5, t));
         this.advanceBallSpin(0.9);
         if (!enteredHoop && t >= 0.97) {
