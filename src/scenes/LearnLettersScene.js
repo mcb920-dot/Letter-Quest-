@@ -28,7 +28,7 @@ export class LearnLettersScene extends Phaser.Scene {
 
   drawArcade() {
     const rescueTheme = SaveSystem.getTheme() === "rescue";
-    this.add.image(BASE_WIDTH / 2, BASE_HEIGHT / 2, rescueTheme ? "rescueClubhouseCourt" : "sunnyGymCourt")
+    this.add.image(BASE_WIDTH / 2, BASE_HEIGHT / 2, rescueTheme ? "rescueArcadeCourt" : "hoopArcadeCourt")
       .setDisplaySize(BASE_WIDTH, BASE_HEIGHT);
     const polish = this.add.graphics();
     polish.fillGradientStyle(0xffffff, 0xffffff, 0x174b6f, 0x174b6f, rescueTheme ? 0.07 : 0.04);
@@ -62,19 +62,27 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   createHUD() {
-    this.add.text(BASE_WIDTH / 2, 34, "BASKETBALL LETTERS", {
-      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "25px", fontStyle: "bold", color: "#fff6e9",
-      stroke: "#08102d", strokeThickness: 7, letterSpacing: 1,
+    this.add.text(BASE_WIDTH / 2, 123, "BASKETBALL LETTERS", {
+      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "28px", fontStyle: "bold", color: "#ffcc38",
+      stroke: "#7b2619", strokeThickness: 8, letterSpacing: 1,
       shadow: { offsetX: 0, offsetY: 4, color: "#000000", blur: 7, fill: true },
     }).setOrigin(0.5);
-    this.add.text(BASE_WIDTH / 2, 75, "Tap the ball • Watch it swish", {
-      fontFamily: "Arial", fontSize: "18px", fontStyle: "bold", color: "#c7f7ff",
+    this.add.text(BASE_WIDTH / 2, 158, "Shoot • Swish • Learn", {
+      fontFamily: "Arial", fontSize: "17px", fontStyle: "bold", color: "#17365e",
     }).setOrigin(0.5);
-    const coin = this.add.graphics();
-    coin.fillStyle(0xffffff, 0.98);
-    coin.fillRoundedRect(BASE_WIDTH - 126, 20, 104, 52, 26);
-    this.coinText = this.add.text(BASE_WIDTH - 74, 46, `⭐ ${this.coins}`, {
-      fontFamily: "Arial", fontSize: "21px", fontStyle: "bold", color: "#111735",
+    ["LETTER", "LEARN", "STARS"].forEach((label, index) => {
+      this.add.text(140 + index * 130, 226, label, {
+        fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "12px", fontStyle: "bold", color: "#eef7ff",
+      }).setOrigin(0.5);
+    });
+    this.letterHud = this.add.text(140, 267, "A", {
+      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "28px", fontStyle: "bold", color: "#ff5148",
+    }).setOrigin(0.5);
+    this.add.text(270, 267, "ABC", {
+      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "22px", fontStyle: "bold", color: "#ffd43b",
+    }).setOrigin(0.5);
+    this.coinText = this.add.text(400, 267, `⭐ ${this.coins}`, {
+      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "21px", fontStyle: "bold", color: "#ffffff",
     }).setOrigin(0.5);
     this.messageButton = this.add.graphics().setDepth(60);
     this.messageButton.fillStyle(0x6c1832, 0.38);
@@ -125,7 +133,7 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   createHoop() {
-    this.add.image(BASE_WIDTH / 2, 291, "premiumGoalV2").setDisplaySize(330, 290).setDepth(20);
+    this.add.image(BASE_WIDTH / 2, 455, "premiumGoalV2").setDisplaySize(330, 290).setDepth(20);
     // Retain the timing model invisibly so existing swish choreography remains stable.
     this.net = this.add.graphics().setDepth(19).setAlpha(0);
     this.drawNetState("rest");
@@ -241,6 +249,7 @@ export class LearnLettersScene extends Phaser.Scene {
     const index = this.progression.getCurrentIndex();
     const colors = ["#ff6b7a", "#4dabf7", "#ffd43b", "#69db7c", "#b197fc", "#ff922b", "#38d9a9", "#f06595"];
     this.ballLetter.setText(letter);
+    this.letterHud.setText(letter);
     setBubbleLetter(this, letter, colors[index % colors.length]);
     this.letterContainer.setAlpha(0).setScale(0.08).setAngle(0);
     this.ball.setPosition(155, 748).setScale(1).setAlpha(1).setDepth(24);
@@ -271,7 +280,7 @@ export class LearnLettersScene extends Phaser.Scene {
         const inverse = 1 - t;
         this.ball.x = inverse * inverse * 155 + 2 * inverse * t * 120 + t * t * (BASE_WIDTH / 2);
         // One uninterrupted diagonal arc that stays clear of the hoop on ascent.
-        this.ball.y = inverse * inverse * 748 + 2 * inverse * t * -240 + t * t * 307;
+        this.ball.y = inverse * inverse * 748 + 2 * inverse * t * -150 + t * t * 471;
         this.ball.setScale(Phaser.Math.Linear(1, 0.5, t));
         this.advanceBallSpin(0.9);
         if (!enteredHoop && t >= 0.97) {
@@ -292,11 +301,11 @@ export class LearnLettersScene extends Phaser.Scene {
       this.cameras.main.shake(65, 0.0014);
     });
     this.tweens.add({
-      targets: this.ball, y: 410, scale: 0.48, duration: 185, ease: "Quad.In",
+      targets: this.ball, y: 570, scale: 0.48, duration: 185, ease: "Quad.In",
       onUpdate: () => {
         this.ball.x = BASE_WIDTH / 2;
         this.advanceBallSpin(0.72);
-        if (!passedRim && this.ball.y >= 326) {
+        if (!passedRim && this.ball.y >= 491) {
           passedRim = true;
           // Only move behind the illustrated net after the ball has crossed the front rim.
           this.ball.setDepth(18);
@@ -304,7 +313,7 @@ export class LearnLettersScene extends Phaser.Scene {
       },
       onComplete: () => {
         this.tweens.add({
-          targets: this.ball, y: 478, scale: 0.46, duration: 190, ease: "Quad.In",
+          targets: this.ball, y: 615, scale: 0.46, duration: 190, ease: "Quad.In",
           onUpdate: () => {
             this.ball.x = BASE_WIDTH / 2;
             this.advanceBallSpin(0.55);
@@ -313,12 +322,12 @@ export class LearnLettersScene extends Phaser.Scene {
             this.ball.setDepth(22);
             this.animateNetState("narrow", 145);
             this.tweens.add({
-              targets: this.ball, y: 565, scale: 0.49, duration: 225, ease: "Quad.In",
+              targets: this.ball, y: 675, scale: 0.49, duration: 225, ease: "Quad.In",
               onUpdate: () => this.advanceBallSpin(0.3),
               onComplete: () => {
                 this.animateNetState("snap", 140, () => this.animateNetState("rest", 230));
                 this.tweens.add({
-                  targets: this.ball, y: 615, alpha: 0, duration: 150, ease: "Quad.In",
+                  targets: this.ball, y: 720, alpha: 0, duration: 150, ease: "Quad.In",
                   onComplete: () => {
                     this.time.delayedCall(65, () => this.celebrate(letter));
                   },
