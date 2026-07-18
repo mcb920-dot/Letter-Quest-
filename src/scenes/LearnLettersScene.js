@@ -28,11 +28,11 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   drawArcade() {
-    const rescueTheme = SaveSystem.getTheme() === "rescue";
-    this.add.image(BASE_WIDTH / 2, BASE_HEIGHT / 2, rescueTheme ? "rescueArcadeCourt" : "hoopArcadeCourt")
+    this.theme = SaveSystem.getTheme();
+    this.add.image(BASE_WIDTH / 2, BASE_HEIGHT / 2, `${this.theme}-background`)
       .setDisplaySize(BASE_WIDTH, BASE_HEIGHT);
     const polish = this.add.graphics();
-    polish.fillGradientStyle(0xffffff, 0xffffff, 0x174b6f, 0x174b6f, rescueTheme ? 0.07 : 0.04);
+    polish.fillGradientStyle(0xffffff, 0xffffff, 0x174b6f, 0x174b6f, 0.035);
     polish.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
   }
 
@@ -154,44 +154,14 @@ export class LearnLettersScene extends Phaser.Scene {
   createHoop() {
     const centerX = BASE_WIDTH / 2;
     this.add.image(centerX, 430, "softGlow").setDisplaySize(360, 300).setTint(0x5fcfff).setAlpha(0.14).setDepth(2);
+    this.backboard = this.add.image(centerX, 385, `${this.theme}-backboard`).setDisplaySize(300, 300).setDepth(10);
+    this.rearRim = this.add.image(centerX, 475, `${this.theme}-rim-back`).setDisplaySize(180, 180).setDepth(16);
+    this.net = this.add.image(centerX, 520, `${this.theme}-net-rest`).setDisplaySize(180, 180).setDepth(22);
+    this.frontRim = this.add.image(centerX, 475, `${this.theme}-rim-front`).setDisplaySize(180, 180).setDepth(26);
+  }
 
-    // Dimensional shadow and transparent glass board.
-    this.add.rectangle(centerX + 9, 397, 248, 158, 0x031126, 0.52).setDepth(7);
-    this.add.rectangle(centerX, 388, 248, 158, 0x174c70, 0.3)
-      .setStrokeStyle(11, 0x162b4a, 1).setDepth(8);
-    this.add.rectangle(centerX, 388, 232, 142, 0x79d8f2, 0.15)
-      .setStrokeStyle(7, 0xfff1e8, 0.98).setDepth(9);
-    this.add.rectangle(centerX, 422, 78, 52, 0xffffff, 0)
-      .setStrokeStyle(6, 0xff7957, 1).setDepth(10);
-    const glass = this.add.graphics().setDepth(9);
-    glass.fillStyle(0xffffff, 0.12);
-    glass.fillTriangle(centerX - 106, 321, centerX - 48, 321, centerX - 98, 454);
-    glass.fillStyle(0xffffff, 0.07);
-    glass.fillTriangle(centerX + 38, 321, centerX + 105, 321, centerX + 72, 454);
-    [[centerX - 104, 329], [centerX + 104, 329], [centerX - 104, 447], [centerX + 104, 447]].forEach(([x, y]) => {
-      this.add.circle(x, y, 5, 0xd9eff7, 0.9).setStrokeStyle(2, 0x38546e).setDepth(10);
-    });
-
-    // Rear rim stays behind the ball; front rim is drawn later above it.
-    this.rearRim = this.add.graphics().setDepth(12);
-    this.rearRim.lineStyle(13, 0x7b220f, 0.45);
-    this.rearRim.strokeEllipse(centerX, 474, 122, 30);
-    this.rearRim.lineStyle(9, 0xd94718, 1);
-    this.rearRim.strokeEllipse(centerX, 470, 118, 27);
-
-    this.net = this.add.graphics().setDepth(20);
-    this.drawNetState("rest");
-    this.frontRim = this.add.graphics().setDepth(26);
-    this.frontRim.lineStyle(11, 0x9f2c12, 1);
-    this.frontRim.beginPath();
-    this.frontRim.moveTo(centerX - 59, 471);
-    for (let step = 1; step <= 24; step += 1) {
-      const angle = Math.PI - (Math.PI * step) / 24;
-      this.frontRim.lineTo(centerX + Math.cos(angle) * 59, 471 + Math.sin(angle) * 13.5);
-    }
-    this.frontRim.strokePath();
-    this.frontRim.lineStyle(3, 0xff9a58, 0.95);
-    this.frontRim.strokeEllipse(centerX, 467, 112, 21);
+  setNetState(state = "rest") {
+    this.net.setTexture(`${this.theme}-net-${state}`);
   }
 
   getNetShape(state = "rest") {
@@ -332,7 +302,7 @@ export class LearnLettersScene extends Phaser.Scene {
     this.ballSphere.setAngle(0);
     this.ballLetter.setAngle(0);
     this.ballShadow.setPosition(BASE_WIDTH / 2, 844).setScale(1).setAlpha(0.3);
-    this.drawNetState("rest");
+    this.setNetState("rest");
     this.audioSystem.preloadLetters(letter, this.progression.getNextLetter());
     this.message.setText(`Tap the ${letter} ball!`);
   }
@@ -345,12 +315,12 @@ export class LearnLettersScene extends Phaser.Scene {
     this.message.setText("Here it goes!");
     this.ball.setX(BASE_WIDTH / 2);
     this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 750, ease: "Sine.Out" });
-    // Two continuous phases model a real shot in screen space: launch beside the goal, then descend through it.
+    // A centered rise and drop keeps the ball above the rim and prevents lateral hook shots.
     this.tweens.add({
-      targets: this.ball, x: 345, y: 400, scale: 0.74, duration: 500, ease: "Quad.Out",
+      targets: this.ball, x: BASE_WIDTH / 2, y: 365, scale: 0.72, duration: 470, ease: "Quad.Out",
       onUpdate: () => this.advanceBallSpin(0.85),
       onComplete: () => {
-        this.animateNetState("open", 150);
+        this.setNetState("open");
         this.tweens.add({
           targets: this.ball, x: BASE_WIDTH / 2, y: 471, scale: 0.7, duration: 240, ease: "Quad.In",
           onUpdate: () => this.advanceBallSpin(0.7),
@@ -362,7 +332,7 @@ export class LearnLettersScene extends Phaser.Scene {
 
   swish(letter) {
     let passedRim = false;
-    this.animateNetState("expanded", 105, () => this.animateNetState("stretch", 230));
+    this.setNetState("stretch");
     this.time.delayedCall(145, () => {
       this.message.setText("SWISH!");
       this.audioSystem.playEffect("swish");
@@ -388,12 +358,12 @@ export class LearnLettersScene extends Phaser.Scene {
           },
           onComplete: () => {
             this.ball.setDepth(22);
-            this.animateNetState("narrow", 145);
             this.tweens.add({
               targets: this.ball, y: 675, scale: 0.49, duration: 225, ease: "Quad.In",
               onUpdate: () => this.advanceBallSpin(0.3),
               onComplete: () => {
-                this.animateNetState("snap", 140, () => this.animateNetState("rest", 230));
+                this.setNetState("snap");
+                this.time.delayedCall(150, () => this.setNetState("rest"));
                 this.tweens.add({
                   targets: this.ball, y: 720, alpha: 0, duration: 150, ease: "Quad.In",
                   onComplete: () => {

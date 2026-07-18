@@ -2,6 +2,7 @@ const COINS_KEY = "letterQuestHDCoins";
 const PROGRESS_KEY = "letterQuestProgress";
 const MUTED_KEY = "letterQuestMuted";
 const THEME_KEY = "letterQuestTheme";
+const THEMES = ["open-court", "classic-arcade", "pup-arcade"];
 
 function readNumber(key, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
   try {
@@ -62,7 +63,9 @@ export const SaveSystem = {
   getTheme() {
     try {
       const theme = window.localStorage.getItem(THEME_KEY);
-      return theme === "rescue" ? "rescue" : "sunny";
+      if (THEMES.includes(theme)) return theme;
+      if (theme === "rescue") return "pup-arcade";
+      return "open-court";
     } catch {
       return "sunny";
     }
@@ -70,7 +73,7 @@ export const SaveSystem = {
 
   saveTheme(theme) {
     try {
-      window.localStorage.setItem(THEME_KEY, theme === "rescue" ? "rescue" : "sunny");
+      window.localStorage.setItem(THEME_KEY, THEMES.includes(theme) ? theme : "open-court");
       return true;
     } catch {
       return false;

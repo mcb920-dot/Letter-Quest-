@@ -10,8 +10,15 @@ export class BootScene extends Phaser.Scene {
   preload() {
     this.load.image("premiumMenu", "/assets/ui/premium-menu.png");
     this.load.image("basketballLettersLogo", "/assets/ui/basketball-letters-logo.png");
-    this.load.image("rescueArcadeCourt", "/assets/court/rescue-arcade-cabinet.png");
-    this.load.image("hoopArcadeCourt", "/assets/court/hoop-arcade-cabinet.png");
+    for (const theme of ["open-court", "classic-arcade", "pup-arcade"]) {
+      this.load.image(`${theme}-background`, `/assets/${theme}/background.png`);
+      this.load.image(`${theme}-backboard`, `/assets/${theme}/backboard.png`);
+      this.load.image(`${theme}-rim-back`, `/assets/${theme}/rim-back.png`);
+      this.load.image(`${theme}-rim-front`, `/assets/${theme}/rim-front.png`);
+      for (const state of ["rest", "open", "stretch", "snap"]) {
+        this.load.image(`${theme}-net-${state}`, `/assets/${theme}/net-${state}.png`);
+      }
+    }
     this.load.image("premiumBasketball", "/assets/basketball/premium-basketball.png");
   }
 

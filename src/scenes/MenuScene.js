@@ -46,15 +46,16 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     const choices = [
-      { key: "sunny", label: "☀  SUNNY GYM", x: 162 },
-      { key: "rescue", label: "🐾  RESCUE PUPS", x: 378 },
+      { key: "open-court", label: "OPEN COURT", x: 104 },
+      { key: "classic-arcade", label: "CLASSIC", x: 270 },
+      { key: "pup-arcade", label: "PUP ARCADE", x: 436 },
     ];
     this.themeControls = choices.map(({ key, label, x }) => {
-      const background = this.add.rectangle(x, 756, 196, 46, 0x172b59, 0.95)
+      const background = this.add.rectangle(x, 756, 150, 46, 0x172b59, 0.95)
         .setStrokeStyle(2, 0x75ddf2, 0.6)
         .setInteractive({ useHandCursor: true });
       const text = this.add.text(x, 756, label, {
-        fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "14px", fontStyle: "bold", color: "#ffffff",
+        fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "12px", fontStyle: "bold", color: "#ffffff",
       }).setOrigin(0.5);
       background.on("pointerdown", () => {
         this.audioSystem.unlock();
