@@ -64,7 +64,7 @@ export class AudioSystem {
   }
 
   preloadLetter(letter) {
-    const path = `/audio/letters/${letter.toUpperCase()}.mp3`;
+    const path = `/audio/letters/${letter.toUpperCase()}.wav`;
     const audio = this.getAudio(path);
     audio.addEventListener("error", () => this.reportMissing(path), { once: true });
     audio.load();
@@ -93,7 +93,7 @@ export class AudioSystem {
   }
 
   async playLetter(letter) {
-    const path = `/audio/letters/${letter.toUpperCase()}.mp3`;
+    const path = `/audio/letters/${letter.toUpperCase()}.wav`;
     if (missingFiles.has(path)) {
       this.speak(`${letter.toLowerCase()}!`);
       return;
