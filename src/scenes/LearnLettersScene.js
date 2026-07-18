@@ -29,31 +29,27 @@ export class LearnLettersScene extends Phaser.Scene {
 
   drawArcade() {
     const rescueTheme = SaveSystem.getTheme() === "rescue";
+    if (rescueTheme) {
+      this.add.image(BASE_WIDTH / 2, BASE_HEIGHT / 2, "rescueClubhouseCourt")
+        .setDisplaySize(BASE_WIDTH, BASE_HEIGHT);
+      const polish = this.add.graphics();
+      polish.fillGradientStyle(0xffffff, 0xffffff, 0x174b6f, 0x174b6f, 0.07);
+      polish.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+      return;
+    }
     const graphics = this.add.graphics();
-    graphics.fillGradientStyle(
-      rescueTheme ? 0x6ddcf3 : 0x73cef4,
-      rescueTheme ? 0x9be8f6 : 0x8fddf8,
-      rescueTheme ? 0xfff3be : 0xdff5ff,
-      rescueTheme ? 0xffdf89 : 0xc9edff,
-      1,
-    );
+    graphics.fillGradientStyle(0x73cef4, 0x8fddf8, 0xdff5ff, 0xc9edff, 1);
     graphics.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-    graphics.fillStyle(rescueTheme ? 0x1764a5 : 0x27558a, 0.96);
+    graphics.fillStyle(0x27558a, 0.96);
     graphics.fillRoundedRect(30, 92, BASE_WIDTH - 60, 790, 42);
     graphics.lineStyle(8, 0xffffff, 0.9);
     graphics.strokeRoundedRect(30, 92, BASE_WIDTH - 60, 790, 42);
-    graphics.lineStyle(5, rescueTheme ? 0xffd447 : 0xff6f78, 0.9);
+    graphics.lineStyle(5, 0xff6f78, 0.9);
     graphics.lineBetween(0, 245, 54, 290);
     graphics.lineBetween(54, 290, 54, 785);
     graphics.lineBetween(BASE_WIDTH, 245, BASE_WIDTH - 54, 290);
     graphics.lineBetween(BASE_WIDTH - 54, 290, BASE_WIDTH - 54, 785);
-    graphics.fillGradientStyle(
-      rescueTheme ? 0x58c98c : 0xe9a45d,
-      rescueTheme ? 0x42b87c : 0xd89055,
-      rescueTheme ? 0x238462 : 0x8c4f35,
-      rescueTheme ? 0x1b6c55 : 0x75412f,
-      0.98,
-    );
+    graphics.fillGradientStyle(0xe9a45d, 0xd89055, 0x8c4f35, 0x75412f, 0.98);
     graphics.fillTriangle(42, 900, BASE_WIDTH - 42, 900, BASE_WIDTH / 2, 350);
     graphics.fillStyle(0xffe0a4, 0.12);
     graphics.fillTriangle(88, 900, BASE_WIDTH / 2, 350, BASE_WIDTH / 2, 900);
@@ -81,26 +77,6 @@ export class LearnLettersScene extends Phaser.Scene {
       graphics.fillTriangle(x, 120, x + 34, 120, x + 17, 146);
     }
 
-    if (rescueTheme) {
-      // A cheerful, wholly original rescue-pup clubhouse motif.
-      const badgeColors = [0xff5c63, 0xffd447, 0x58d39b, 0x7d8cff];
-      for (let index = 0; index < 4; index += 1) {
-        const x = 92 + index * 118;
-        const y = 186 + (index % 2) * 22;
-        graphics.fillStyle(0xffffff, 0.94);
-        graphics.fillCircle(x, y, 24);
-        graphics.fillStyle(badgeColors[index], 1);
-        graphics.fillCircle(x, y + 7, 10);
-        graphics.fillCircle(x - 11, y - 5, 5);
-        graphics.fillCircle(x - 4, y - 12, 5);
-        graphics.fillCircle(x + 5, y - 12, 5);
-        graphics.fillCircle(x + 12, y - 5, 5);
-      }
-      graphics.fillStyle(0xffffff, 0.9);
-      graphics.fillRoundedRect(154, 402, 232, 35, 17);
-      graphics.fillStyle(0xff5c63, 1);
-      graphics.fillRoundedRect(165, 410, 210, 12, 6);
-    }
   }
 
   createAtmosphere() {
