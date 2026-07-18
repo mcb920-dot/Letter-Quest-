@@ -81,8 +81,8 @@ export class MenuScene extends Phaser.Scene {
   createActivityCard(x, activity, title, subtitle, symbol, accent) {
     const panel = this.addPanel(x, 525, 210, 400);
     const preview = this.add.image(x, 475, activity === "letters" ? "open-court-background" : "pup-arcade-background")
-      .setDisplaySize(152, 270);
-    const veil = this.add.rectangle(x, 475, 152, 270, 0x09225a, 0.25);
+      .setDisplaySize(184, 270);
+    const veil = this.add.rectangle(x, 475, 184, 270, 0x09225a, 0.25);
     const ball = this.add.image(x, 493, "premiumBasketball").setDisplaySize(126, 126);
     const symbolText = this.add.text(x, 493, symbol, {
       fontFamily: FONT, fontSize: activity === "letters" ? "52px" : "31px", fontStyle: "bold",
@@ -133,7 +133,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   sharpenText() {
-    const resolution = 4;
+    const resolution = Math.min(Math.max(window.devicePixelRatio || 1, 2), 3);
     for (const child of this.screen.list) {
       if (child instanceof Phaser.GameObjects.Text) child.setResolution(resolution);
     }
@@ -166,10 +166,10 @@ export class MenuScene extends Phaser.Scene {
   }
 
   addSoundControl() {
-    const background = this.add.circle(BASE_WIDTH / 2, 920, 28, 0xffffff, 0.94)
+    const background = this.add.circle(BASE_WIDTH / 2, 895, 28, 0xffffff, 0.94)
       .setStrokeStyle(3, 0x59dfff, 0.9)
       .setInteractive({ useHandCursor: true });
-    const label = this.add.text(BASE_WIDTH / 2, 920, this.audioSystem.isMuted() ? "🔇" : "🔊", {
+    const label = this.add.text(BASE_WIDTH / 2, 895, this.audioSystem.isMuted() ? "🔇" : "🔊", {
       fontFamily: "Arial", fontSize: "21px", color: "#111735",
     }).setOrigin(0.5);
     background.on("pointerdown", () => {
