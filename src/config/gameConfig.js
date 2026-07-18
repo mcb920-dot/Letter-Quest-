@@ -11,7 +11,9 @@ export const gameConfig = {
   parent: "game",
   width: BASE_WIDTH,
   height: BASE_HEIGHT,
-  resolution: Math.min(window.devicePixelRatio || 1, 3),
+  // FIT can enlarge the portrait canvas on desktop displays even when DPR is 1.
+  // Keep at least a 2x backing buffer so artwork and text remain crisp there.
+  resolution: Math.min(Math.max(window.devicePixelRatio || 1, 2), 3),
   backgroundColor: "#0d1230",
   scale: {
     mode: Phaser.Scale.FIT,

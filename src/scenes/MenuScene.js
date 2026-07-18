@@ -75,6 +75,7 @@ export class MenuScene extends Phaser.Scene {
     this.createActivityCard(150, "letters", "LETTERS", "A – Z", "A", "#ff6b65");
     this.createActivityCard(390, "numbers", "NUMBERS", "1 – 20", "123", "#ffd43b");
     this.addSoundControl();
+    this.sharpenText();
   }
 
   createActivityCard(x, activity, title, subtitle, symbol, accent) {
@@ -128,6 +129,14 @@ export class MenuScene extends Phaser.Scene {
     });
     this.addArcadeButton(66, 55, 74, 52, "‹", () => this.showActivityMenu(), 0x4b2a99);
     this.addSoundControl();
+    this.sharpenText();
+  }
+
+  sharpenText() {
+    const resolution = Math.min(Math.max(window.devicePixelRatio || 1, 2), 3);
+    for (const child of this.screen.list) {
+      if (child instanceof Phaser.GameObjects.Text) child.setResolution(resolution);
+    }
   }
 
   createCourtCard(court, x) {
