@@ -133,12 +133,31 @@ export class AudioSystem {
     this.pauseMusic();
   }
 
+  playLetterLift() {
+    if (this.muted || !this.context || this.context.state !== "running") return;
+    const now = this.context.currentTime;
+    [659.25, 783.99].forEach((frequency, index) => {
+      const oscillator = this.context.createOscillator();
+      const gain = this.context.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.035, now + 0.018 + index * 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18 + index * 0.04);
+      oscillator.connect(gain);
+      gain.connect(this.context.destination);
+      oscillator.start(now + index * 0.045);
+      oscillator.stop(now + 0.24 + index * 0.045);
+    });
+  }
+
   async playLetter(letter) {
     const path = `/audio/letters/${letter.toUpperCase()}.wav`;
     if (missingFiles.has(path)) {
       this.speak(`${letter.toLowerCase()}!`);
       return;
     }
+    this.playLetterLift();
     if (await this.playFile(path)) return;
     this.speak(`${letter.toLowerCase()}!`);
   }
