@@ -106,7 +106,13 @@ export class LearnLettersScene extends Phaser.Scene {
     this.frontRim.lineStyle(9, 0xff6d31, 1);
     this.frontRim.beginPath();
     this.frontRim.moveTo(BASE_WIDTH / 2 - 55, 307);
-    this.frontRim.bezierCurveTo(BASE_WIDTH / 2 - 34, 323, BASE_WIDTH / 2 + 34, 323, BASE_WIDTH / 2 + 55, 307);
+    for (let step = 1; step <= 20; step += 1) {
+      const angle = Math.PI - (Math.PI * step) / 20;
+      this.frontRim.lineTo(
+        BASE_WIDTH / 2 + Math.cos(angle) * 55,
+        307 + Math.sin(angle) * 12.5,
+      );
+    }
     this.frontRim.strokePath();
   }
 
