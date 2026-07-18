@@ -126,24 +126,24 @@ export class LearnLettersScene extends Phaser.Scene {
 
   createHoop() {
     this.add.image(BASE_WIDTH / 2, 285, "softGlow").setDisplaySize(360, 360).setTint(0x69dcff).setAlpha(0.12).setDepth(2);
-    this.add.rectangle(BASE_WIDTH / 2 + 11, 241, 238, 154, 0x020617, 0.42).setDepth(7);
-    this.add.rectangle(BASE_WIDTH / 2, 228, 238, 154, 0x7089a8, 0.28).setStrokeStyle(10, 0xf3fbff, 0.98).setDepth(8);
-    this.add.rectangle(BASE_WIDTH / 2, 228, 213, 129, 0x9ec6d9, 0.08).setStrokeStyle(2, 0xc9f4ff, 0.38).setDepth(8);
+    this.add.rectangle(BASE_WIDTH / 2 + 8, 237, 238, 154, 0x07162b, 0.38).setDepth(7);
+    this.add.rectangle(BASE_WIDTH / 2, 228, 238, 154, 0x1f4f70, 0.2).setStrokeStyle(8, 0xffeee9, 0.98).setDepth(8);
+    this.add.rectangle(BASE_WIDTH / 2, 228, 216, 132, 0x8ed4e8, 0.09).setStrokeStyle(2, 0xbcecff, 0.42).setDepth(8);
     const reflection = this.add.graphics().setDepth(8);
     reflection.fillStyle(0xffffff, 0.1);
     reflection.fillTriangle(BASE_WIDTH / 2 - 104, 168, BASE_WIDTH / 2 - 36, 168, BASE_WIDTH / 2 - 94, 285);
     reflection.fillStyle(0xffffff, 0.05);
     reflection.fillTriangle(BASE_WIDTH / 2 + 34, 168, BASE_WIDTH / 2 + 102, 168, BASE_WIDTH / 2 + 72, 286);
-    this.add.rectangle(BASE_WIDTH / 2, 252, 72, 48, 0xffffff, 0).setStrokeStyle(6, 0xff6b64).setDepth(9);
+    this.add.rectangle(BASE_WIDTH / 2, 252, 72, 48, 0xffffff, 0).setStrokeStyle(5, 0xffeee9).setDepth(9);
     this.add.ellipse(BASE_WIDTH / 2, 313, 121, 31, 0x2a0b06, 0.32).setDepth(11);
     this.rearRim = this.add.graphics().setDepth(12);
-    this.rearRim.lineStyle(12, 0xd7431b, 1);
+    this.rearRim.lineStyle(9, 0xb93f1e, 1);
     this.rearRim.strokeEllipse(BASE_WIDTH / 2, 307, 116, 27);
 
     this.net = this.add.graphics().setDepth(20);
     this.drawNetState("rest");
     this.frontRim = this.add.graphics().setDepth(26);
-    this.frontRim.lineStyle(12, 0xff7130, 1);
+    this.frontRim.lineStyle(9, 0xe75b2a, 1);
     this.frontRim.beginPath();
     this.frontRim.moveTo(BASE_WIDTH / 2 - 58, 307);
     for (let step = 1; step <= 20; step += 1) {
@@ -158,12 +158,12 @@ export class LearnLettersScene extends Phaser.Scene {
 
   getNetShape(state = "rest") {
     const states = {
-      rest: { topWidth: 48, upperWidth: 35, waistWidth: 25, bottomWidth: 22, bottom: 405 },
-      open: { topWidth: 51, upperWidth: 40, waistWidth: 29, bottomWidth: 22, bottom: 410 },
-      expanded: { topWidth: 52, upperWidth: 44, waistWidth: 34, bottomWidth: 23, bottom: 417 },
-      stretch: { topWidth: 51, upperWidth: 42, waistWidth: 31, bottomWidth: 18, bottom: 432 },
-      narrow: { topWidth: 49, upperWidth: 36, waistWidth: 23, bottomWidth: 15, bottom: 421 },
-      snap: { topWidth: 48, upperWidth: 32, waistWidth: 20, bottomWidth: 24, bottom: 397 },
+      rest: { topWidth: 48, upperWidth: 35, waistWidth: 25, bottomWidth: 22, bottom: 392 },
+      open: { topWidth: 51, upperWidth: 40, waistWidth: 29, bottomWidth: 22, bottom: 398 },
+      expanded: { topWidth: 52, upperWidth: 44, waistWidth: 34, bottomWidth: 23, bottom: 404 },
+      stretch: { topWidth: 51, upperWidth: 42, waistWidth: 31, bottomWidth: 18, bottom: 417 },
+      narrow: { topWidth: 49, upperWidth: 36, waistWidth: 23, bottomWidth: 15, bottom: 406 },
+      snap: { topWidth: 48, upperWidth: 32, waistWidth: 20, bottomWidth: 24, bottom: 384 },
     };
     return { ...(states[state] || states.rest) };
   }
@@ -183,7 +183,7 @@ export class LearnLettersScene extends Phaser.Scene {
       else width = Phaser.Math.Linear(shape.waistWidth, shape.bottomWidth, (t - 0.67) / 0.33);
       return width;
     };
-    this.net.lineStyle(2.3, 0xf7fbff, 0.96);
+    this.net.lineStyle(1.8, 0xe9edf1, 0.94);
     const rows = 7;
     const columns = 8;
     for (let row = 0; row < rows; row += 1) {
@@ -212,7 +212,7 @@ export class LearnLettersScene extends Phaser.Scene {
         this.net.fillCircle(x, y, 1.35);
       }
     }
-    this.net.lineStyle(3, 0xffffff, 0.9);
+    this.net.lineStyle(2, 0xe9edf1, 0.88);
     this.net.lineBetween(BASE_WIDTH / 2 - shape.bottomWidth, shape.bottom, BASE_WIDTH / 2 + shape.bottomWidth, shape.bottom);
   }
 
@@ -237,8 +237,8 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   createBall() {
-    this.ballShadow = this.add.ellipse(BASE_WIDTH / 2, 838, 188, 44, 0x000000, 0.34).setDepth(15);
-    this.ball = this.add.container(BASE_WIDTH / 2, 748).setDepth(24);
+    this.ballShadow = this.add.ellipse(155, 838, 188, 44, 0x000000, 0.34).setDepth(15);
+    this.ball = this.add.container(155, 748).setDepth(24);
     this.ballSphere = this.add.image(0, 0, "premiumBasketball").setDisplaySize(220, 220);
     this.ballLetter = this.add.text(0, 2, "A", {
       fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "68px", fontStyle: "bold",
@@ -268,12 +268,12 @@ export class LearnLettersScene extends Phaser.Scene {
     this.ballLetter.setText(letter);
     setBubbleLetter(this, letter, colors[index % colors.length]);
     this.letterContainer.setAlpha(0).setScale(0.08).setAngle(0);
-    this.ball.setPosition(BASE_WIDTH / 2, 748).setScale(1).setAlpha(1).setDepth(24);
+    this.ball.setPosition(155, 748).setScale(1).setAlpha(1).setDepth(24);
     this.spinFrame = 0;
     this.spinElapsed = 0;
     this.ballSphere.setAngle(0);
     this.ballLetter.setAngle(0);
-    this.ballShadow.setPosition(BASE_WIDTH / 2, 838).setScale(1).setAlpha(0.34);
+    this.ballShadow.setPosition(155, 838).setScale(1).setAlpha(0.34);
     this.drawNetState("rest");
     this.audioSystem.preloadLetters(letter, this.progression.getNextLetter());
     this.message.setText(`Tap the ${letter} ball!`);
@@ -285,7 +285,7 @@ export class LearnLettersScene extends Phaser.Scene {
     const letter = this.progression.getCurrentLetter();
     this.audioSystem.playEffect("tap");
     this.message.setText("Here it goes!");
-    this.ball.setX(BASE_WIDTH / 2);
+    this.ball.setX(155);
     this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 900, ease: "Sine.Out" });
     const shot = { progress: 0 };
     let enteredHoop = false;
@@ -294,8 +294,8 @@ export class LearnLettersScene extends Phaser.Scene {
       onUpdate: () => {
         const t = shot.progress;
         const inverse = 1 - t;
-        this.ball.x = BASE_WIDTH / 2;
-        // One uninterrupted arc from the child's hand directly into the rim.
+        this.ball.x = inverse * inverse * 155 + 2 * inverse * t * 120 + t * t * (BASE_WIDTH / 2);
+        // One uninterrupted diagonal arc that stays clear of the hoop on ascent.
         this.ball.y = inverse * inverse * 748 + 2 * inverse * t * -240 + t * t * 307;
         this.ball.setScale(Phaser.Math.Linear(1, 0.5, t));
         this.advanceBallSpin(0.9);
