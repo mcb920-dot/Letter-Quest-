@@ -1,6 +1,7 @@
 const COINS_KEY = "letterQuestHDCoins";
 const PROGRESS_KEY = "letterQuestProgress";
 const MUTED_KEY = "letterQuestMuted";
+const THEME_KEY = "letterQuestTheme";
 
 function readNumber(key, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
   try {
@@ -56,5 +57,28 @@ export const SaveSystem = {
     } catch {
       return false;
     }
+  },
+
+  getTheme() {
+    try {
+      const theme = window.localStorage.getItem(THEME_KEY);
+      return theme === "rescue" ? "rescue" : "sunny";
+    } catch {
+      return "sunny";
+    }
+  },
+
+  saveTheme(theme) {
+    try {
+      window.localStorage.setItem(THEME_KEY, theme === "rescue" ? "rescue" : "sunny");
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  resetGameProgress() {
+    this.saveCoins(0);
+    this.saveLetterIndex(0);
   },
 };

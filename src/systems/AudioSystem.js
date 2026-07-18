@@ -7,6 +7,9 @@ export class AudioSystem {
     this.synthesis = "speechSynthesis" in window ? window.speechSynthesis : null;
     this.muted = SaveSystem.getMuted();
     this.cache = new Map();
+    this.musicRequested = false;
+    this.musicTimer = null;
+    this.musicStep = 0;
     this.handleVoicesChanged = () => this.pickVoice();
     this.synthesis?.addEventListener("voiceschanged", this.handleVoicesChanged);
   }
@@ -21,6 +24,9 @@ export class AudioSystem {
     if (this.muted) {
       this.synthesis?.cancel();
       for (const audio of this.cache.values()) audio.pause();
+      this.pauseMusic();
+    } else if (this.musicRequested) {
+      this.startMusic();
     }
     return this.muted;
   }
@@ -92,6 +98,41 @@ export class AudioSystem {
     return this.playFile(`/audio/effects/${name}.mp3`);
   }
 
+  startMusic() {
+    this.musicRequested = true;
+    if (this.muted || this.musicTimer || !this.context) return;
+    const notes = [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23];
+    const playNext = () => {
+      if (this.muted || !this.context || this.context.state !== "running") return;
+      const frequency = notes[this.musicStep % notes.length];
+      this.musicStep += 1;
+      const now = this.context.currentTime;
+      const oscillator = this.context.createOscillator();
+      const gain = this.context.createGain();
+      oscillator.type = this.musicStep % 2 === 0 ? "sine" : "triangle";
+      oscillator.frequency.setValueAtTime(frequency, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.028, now + 0.035);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+      oscillator.connect(gain);
+      gain.connect(this.context.destination);
+      oscillator.start(now);
+      oscillator.stop(now + 0.44);
+    };
+    playNext();
+    this.musicTimer = window.setInterval(playNext, 520);
+  }
+
+  pauseMusic() {
+    if (this.musicTimer) window.clearInterval(this.musicTimer);
+    this.musicTimer = null;
+  }
+
+  stopMusic() {
+    this.musicRequested = false;
+    this.pauseMusic();
+  }
+
   async playLetter(letter) {
     const path = `/audio/letters/${letter.toUpperCase()}.wav`;
     if (missingFiles.has(path)) {
@@ -129,6 +170,7 @@ export class AudioSystem {
   }
 
   destroy() {
+    this.stopMusic();
     this.synthesis?.cancel();
     this.synthesis?.removeEventListener("voiceschanged", this.handleVoicesChanged);
     this.context?.close().catch(() => {});
