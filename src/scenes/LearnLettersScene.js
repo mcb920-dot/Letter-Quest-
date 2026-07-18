@@ -88,7 +88,7 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   createHUD() {
-    this.add.image(BASE_WIDTH / 2, 120, "basketballLettersLogo").setDisplaySize(390, 195).setDepth(3);
+    this.add.image(BASE_WIDTH / 2, 120, "basketballLearningLogo").setDisplaySize(390, 195).setDepth(3);
     ["LETTER", "LEARN", "STARS"].forEach((label, index) => {
       this.add.text(140 + index * 130, 218, label, {
         fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "12px", fontStyle: "bold", color: "#eef7ff",
