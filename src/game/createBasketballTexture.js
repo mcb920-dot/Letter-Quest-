@@ -1,15 +1,21 @@
+export const BASKETBALL_SPIN_FRAMES = 10;
+
 export function createBasketballTexture(scene) {
   const sphere = createSphereCanvas();
   scene.textures.addCanvas("basketballSphere", sphere);
-  const seams = createSeamCanvas();
-  scene.textures.addCanvas("basketballSeams", seams);
+  const seamFrames = [];
+  for (let frame = 0; frame < BASKETBALL_SPIN_FRAMES; frame += 1) {
+    const seams = createSeamCanvas(frame / BASKETBALL_SPIN_FRAMES);
+    seamFrames.push(seams);
+    scene.textures.addCanvas(`basketballSeams${frame}`, seams);
+  }
 
   // Static composite retained for the decorative menu basketball.
   const composite = document.createElement("canvas");
   composite.width = composite.height = 512;
   const compositeContext = composite.getContext("2d");
   compositeContext.drawImage(sphere, 0, 0);
-  compositeContext.drawImage(seams, 0, 0);
+  compositeContext.drawImage(seamFrames[0], 0, 0);
   scene.textures.addCanvas("basketballHD", composite);
 }
 
@@ -44,15 +50,15 @@ function createSphereCanvas() {
   ctx.clip();
 
   // Fixed leather pebbling reinforces the spherical surface without spinning the lighting.
-  for (let y = 34; y < size - 34; y += 7) {
-    for (let x = 34; x < size - 34; x += 7) {
+  for (let y = 34; y < size - 34; y += 5) {
+    for (let x = 34; x < size - 34; x += 5) {
       const dx = x - center;
       const dy = y - center;
       if (dx * dx + dy * dy >= (radius - 5) ** 2) continue;
       const lightFacing = Math.max(0, 1 - Math.hypot(dx + 80, dy + 90) / 340);
       ctx.beginPath();
-      ctx.arc(x + Math.sin(x * 0.19 + y) * 0.9, y + Math.cos(y * 0.17 + x) * 0.9, 1.15, 0, Math.PI * 2);
-      ctx.fillStyle = lightFacing > 0.45 ? "rgba(255,231,180,.25)" : "rgba(69,16,5,.2)";
+      ctx.ellipse(x + Math.sin(x * 0.19 + y) * 0.65, y + Math.cos(y * 0.17 + x) * 0.65, 0.9, 0.72, 0, 0, Math.PI * 2);
+      ctx.fillStyle = lightFacing > 0.45 ? "rgba(255,225,165,.19)" : "rgba(61,13,4,.24)";
       ctx.fill();
     }
   }
@@ -65,8 +71,8 @@ function createSphereCanvas() {
   ctx.fillRect(0, 0, size, size);
 
   const highlight = ctx.createRadialGradient(center - 105, center - 118, 3, center - 105, center - 118, 102);
-  highlight.addColorStop(0, "rgba(255,255,255,.62)");
-  highlight.addColorStop(0.28, "rgba(255,255,255,.23)");
+  highlight.addColorStop(0, "rgba(255,255,255,.44)");
+  highlight.addColorStop(0.34, "rgba(255,255,255,.16)");
   highlight.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = highlight;
   ctx.fillRect(0, 0, size, size);
@@ -80,7 +86,7 @@ function createSphereCanvas() {
   return canvas;
 }
 
-function createSeamCanvas() {
+function createSeamCanvas(progress) {
   const size = 512;
   const center = size / 2;
   const radius = 216;
@@ -92,30 +98,56 @@ function createSeamCanvas() {
   ctx.beginPath();
   ctx.arc(center, center, radius, 0, Math.PI * 2);
   ctx.clip();
-  ctx.strokeStyle = "#54200f";
-  ctx.lineWidth = 18;
+  ctx.strokeStyle = "#3d160c";
+  ctx.lineWidth = 20;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // A stable, recognizable basketball channel pattern. Only this layer spins.
-  ctx.beginPath();
-  ctx.moveTo(center, center - radius);
-  ctx.bezierCurveTo(center - 42, center - 108, center + 42, center + 108, center, center + radius);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(center - radius, center);
-  ctx.bezierCurveTo(center - 85, center - 35, center + 85, center + 35, center + radius, center);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(center - radius * 0.72, center - radius * 0.7);
-  ctx.bezierCurveTo(center - 42, center - 65, center - 42, center + 65, center - radius * 0.72, center + radius * 0.7);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(center + radius * 0.72, center - radius * 0.7);
-  ctx.bezierCurveTo(center + 42, center - 65, center + 42, center + 65, center + radius * 0.72, center + radius * 0.7);
-  ctx.stroke();
+  const rotation = progress * Math.PI * 2;
+  const normals = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [Math.sin(0.88), Math.cos(0.88), 0],
+    [Math.sin(-0.88), Math.cos(-0.88), 0],
+  ];
+  for (const normal of normals) drawGreatCircle(ctx, normal, rotation, center, radius);
   ctx.restore();
   return canvas;
+}
+
+function drawGreatCircle(ctx, normal, rotation, center, radius) {
+  const reference = Math.abs(normal[2]) < 0.9 ? [0, 0, 1] : [0, 1, 0];
+  const first = normalize(cross(normal, reference));
+  const second = cross(normal, first);
+  let drawing = false;
+  ctx.beginPath();
+  for (let step = 0; step <= 180; step += 1) {
+    const angle = (step / 180) * Math.PI * 2;
+    const x = first[0] * Math.cos(angle) + second[0] * Math.sin(angle);
+    const y = first[1] * Math.cos(angle) + second[1] * Math.sin(angle);
+    const z = first[2] * Math.cos(angle) + second[2] * Math.sin(angle);
+    const rotatedY = y * Math.cos(rotation) - z * Math.sin(rotation);
+    const rotatedZ = y * Math.sin(rotation) + z * Math.cos(rotation);
+    if (rotatedZ > 0.015) {
+      const px = center + x * radius;
+      const py = center + rotatedY * radius;
+      if (!drawing) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+      drawing = true;
+    } else {
+      drawing = false;
+    }
+  }
+  ctx.stroke();
+}
+
+function cross(a, b) {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+}
+
+function normalize(vector) {
+  const length = Math.hypot(...vector) || 1;
+  return vector.map((value) => value / length);
 }
 
 export function createSoftGlowTexture(scene) {

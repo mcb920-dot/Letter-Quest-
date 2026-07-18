@@ -3,7 +3,7 @@ import { BASE_HEIGHT, BASE_WIDTH } from "../config/gameConfig.js";
 
 export function createConfetti(scene) {
   const colors = [0xff5d73, 0xffd43b, 0x4dabf7, 0x69db7c, 0xb197fc, 0xff922b, 0x38d9a9];
-  for (let i = 0; i < 92; i += 1) {
+  for (let i = 0; i < 64; i += 1) {
     const particle = scene.add.rectangle(
       BASE_WIDTH / 2 + Phaser.Math.Between(-28, 28), BASE_HEIGHT / 2 + Phaser.Math.Between(-28, 28),
       Phaser.Math.Between(8, 14), Phaser.Math.Between(16, 28), Phaser.Utils.Array.GetRandom(colors),
@@ -22,7 +22,7 @@ export function createConfetti(scene) {
 }
 
 export function createSparkles(scene) {
-  for (let i = 0; i < 24; i += 1) {
+  for (let i = 0; i < 18; i += 1) {
     const sparkle = scene.add.star(
       BASE_WIDTH / 2 + Phaser.Math.Between(-120, 120),
       BASE_HEIGHT / 2 + Phaser.Math.Between(-150, 150),
