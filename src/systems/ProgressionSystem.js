@@ -1,12 +1,14 @@
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const NUMBERS = Array.from({ length: 20 }, (_, index) => String(index + 1));
 
 export class ProgressionSystem {
-  constructor(startIndex = 0) {
+  constructor(startIndex = 0, activity = "letters") {
+    this.items = activity === "numbers" ? NUMBERS : [...ALPHABET];
     this.index = this.normalize(startIndex);
   }
 
   normalize(index) {
-    return ((Math.floor(Number(index) || 0) % ALPHABET.length) + ALPHABET.length) % ALPHABET.length;
+    return ((Math.floor(Number(index) || 0) % this.items.length) + this.items.length) % this.items.length;
   }
 
   getCurrentIndex() {
@@ -14,11 +16,11 @@ export class ProgressionSystem {
   }
 
   getCurrentLetter() {
-    return ALPHABET[this.index];
+    return this.items[this.index];
   }
 
   getNextLetter() {
-    return ALPHABET[this.normalize(this.index + 1)];
+    return this.items[this.normalize(this.index + 1)];
   }
 
   advance() {
