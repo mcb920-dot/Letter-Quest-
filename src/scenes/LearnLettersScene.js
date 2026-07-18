@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/gameConfig.js";
 import { createConfetti, createSparkles } from "../game/createConfetti.js";
-import { createLetterEffects } from "../game/createLetterEffects.js";
+import { createLetterEffects, setBubbleLetter } from "../game/createLetterEffects.js";
 import { ProgressionSystem } from "../systems/ProgressionSystem.js";
 import { SaveSystem } from "../systems/SaveSystem.js";
 
@@ -20,6 +20,7 @@ export class LearnLettersScene extends Phaser.Scene {
     this.createHoop();
     this.createBall();
     Object.assign(this, createLetterEffects(this));
+    this.createSoundControl();
     this.prepareRound();
   }
 
@@ -73,14 +74,35 @@ export class LearnLettersScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(61);
   }
 
+  createSoundControl() {
+    const background = this.add.circle(42, 44, 25, 0xffffff, 0.94).setDepth(64);
+    this.soundLabel = this.add.text(42, 44, "", { fontFamily: "Arial", fontSize: "19px", color: "#111735" })
+      .setOrigin(0.5).setDepth(65);
+    background.setInteractive({ useHandCursor: true });
+    const update = () => this.soundLabel.setText(this.audioSystem.isMuted() ? "🔇" : "🔊");
+    update();
+    background.on("pointerdown", () => {
+      this.audioSystem.unlock();
+      this.audioSystem.toggleMuted();
+      update();
+    });
+  }
+
   createHoop() {
+    // Backboard and support are the rear-most hoop elements.
     this.add.rectangle(BASE_WIDTH / 2, 228, 188, 116, 0xeaf7ff, 0.98).setStrokeStyle(10, 0xffffff).setDepth(8);
     this.add.rectangle(BASE_WIDTH / 2, 250, 68, 45, 0xffffff, 0).setStrokeStyle(6, 0xff5f73).setDepth(9);
     this.add.rectangle(BASE_WIDTH / 2 + 80, 430, 16, 360, 0x6c789b).setDepth(3);
     this.add.rectangle(BASE_WIDTH / 2 + 80, 616, 154, 22, 0x4b5675).setDepth(3);
-    this.add.ellipse(BASE_WIDTH / 2, 304, 110, 25, 0xdd4a21).setStrokeStyle(9, 0xdd4a21).setDepth(12);
-    this.net = this.add.graphics().setDepth(11);
-    this.drawNet(1, 0);
+    this.rearRim = this.add.graphics().setDepth(12);
+    this.rearRim.lineStyle(9, 0xc93f20, 1);
+    this.rearRim.beginPath();
+    this.rearRim.arc(BASE_WIDTH / 2, 307, 55, Math.PI, Math.PI * 2, false);
+    this.rearRim.strokePath();
+
+    // The ball drops behind these net strands and the front half of the rim.
+    this.net = this.add.graphics().setDepth(20);
+    this.drawNetState("rest", 1);
     this.frontRim = this.add.graphics().setDepth(26);
     this.frontRim.lineStyle(9, 0xff6d31, 1);
     this.frontRim.beginPath();
@@ -88,20 +110,48 @@ export class LearnLettersScene extends Phaser.Scene {
     this.frontRim.strokePath();
   }
 
-  drawNet(stretch = 1, sway = 0) {
+  drawNetState(state = "rest", progress = 1) {
     this.net.clear();
+    const states = {
+      rest: { topWidth: 48, waistWidth: 25, bottomWidth: 22, bottom: 405 },
+      open: { topWidth: 55, waistWidth: 42, bottomWidth: 27, bottom: 414 },
+      stretch: { topWidth: 54, waistWidth: 48, bottomWidth: 18, bottom: 472 },
+      snap: { topWidth: 48, waistWidth: 18, bottomWidth: 28, bottom: 386 },
+    };
+    const rest = states.rest;
+    const target = states[state] || rest;
+    const shape = {};
+    for (const key of Object.keys(rest)) shape[key] = Phaser.Math.Linear(rest[key], target[key], progress);
     const top = 315;
-    const bottom = 403 + (stretch - 1) * 42;
-    this.net.lineStyle(4, 0xffffff, 0.98);
-    this.net.lineBetween(BASE_WIDTH / 2 - 40, top, BASE_WIDTH / 2 - 24 + sway, bottom);
-    this.net.lineBetween(BASE_WIDTH / 2 + 40, top, BASE_WIDTH / 2 + 24 + sway, bottom);
-    this.net.lineBetween(BASE_WIDTH / 2 - 24 + sway, bottom, BASE_WIDTH / 2 + 24 + sway, bottom);
-    for (let i = -32; i <= 32; i += 16) this.net.lineBetween(BASE_WIDTH / 2 + i, top + 4, BASE_WIDTH / 2 + i * 0.55 + sway, bottom);
-    for (let y = 335; y < bottom; y += 17) {
-      const progress = (y - top) / (bottom - top);
-      const width = 38 - 14 * progress;
-      this.net.lineBetween(BASE_WIDTH / 2 - width + sway * progress, y, BASE_WIDTH / 2 + width + sway * progress, y);
+    const mid = top + (shape.bottom - top) * 0.55;
+    this.net.lineStyle(3.5, 0xffffff, 0.96);
+    for (let i = -4; i <= 4; i += 1) {
+      const topX = BASE_WIDTH / 2 + (i / 4) * shape.topWidth;
+      const midX = BASE_WIDTH / 2 + (i / 4) * shape.waistWidth;
+      const bottomX = BASE_WIDTH / 2 + (i / 4) * shape.bottomWidth;
+      this.net.beginPath();
+      this.net.moveTo(topX, top);
+      this.net.lineTo(midX, mid);
+      this.net.lineTo(bottomX, shape.bottom);
+      this.net.strokePath();
     }
+    for (let row = 1; row <= 5; row += 1) {
+      const t = row / 6;
+      const y = Phaser.Math.Linear(top, shape.bottom, t);
+      const width = t < 0.55
+        ? Phaser.Math.Linear(shape.topWidth, shape.waistWidth, t / 0.55)
+        : Phaser.Math.Linear(shape.waistWidth, shape.bottomWidth, (t - 0.55) / 0.45);
+      this.net.lineBetween(BASE_WIDTH / 2 - width, y, BASE_WIDTH / 2 + width, y);
+    }
+  }
+
+  animateNetState(state, duration, onComplete) {
+    const driver = { progress: 0 };
+    this.tweens.add({
+      targets: driver, progress: 1, duration, ease: "Sine.InOut",
+      onUpdate: () => this.drawNetState(state, driver.progress),
+      onComplete,
+    });
   }
 
   createBall() {
@@ -121,14 +171,16 @@ export class LearnLettersScene extends Phaser.Scene {
     this.locked = false;
     const letter = this.progression.getCurrentLetter();
     const index = this.progression.getCurrentIndex();
-    const colors = [0xff6b6b, 0x4dabf7, 0xffd43b, 0x69db7c, 0xb197fc, 0xff922b, 0x38d9a9, 0xf06595];
+    const colors = ["#ff6b7a", "#4dabf7", "#ffd43b", "#69db7c", "#b197fc", "#ff922b", "#38d9a9", "#f06595"];
     this.ballLetter.setText(letter);
-    this.letter.setText(letter).setColor(`#${colors[index % colors.length].toString(16).padStart(6, "0")}`);
-    this.letterShadow.setText(letter);
+    setBubbleLetter(this, letter, colors[index % colors.length]);
+    this.letterContainer.setAlpha(0).setScale(0.08).setAngle(0);
     this.ball.setPosition(BASE_WIDTH / 2, 690).setScale(1).setAlpha(1).setDepth(24);
     this.ballImage.setAngle(0);
     this.ballLetter.setAngle(0);
     this.ballShadow.setPosition(BASE_WIDTH / 2, 790).setScale(1).setAlpha(0.28);
+    this.drawNetState("rest", 1);
+    this.audioSystem.preloadLetters(letter, this.progression.getNextLetter());
     this.message.setText(`Tap the ${letter} ball!`);
   }
 
@@ -136,39 +188,54 @@ export class LearnLettersScene extends Phaser.Scene {
     if (this.locked) return;
     this.locked = true;
     const letter = this.progression.getCurrentLetter();
+    this.audioSystem.playEffect("tap");
     this.message.setText("Here it goes!");
-    this.tweens.add({ targets: this.ballShadow, scaleX: 0.38, scaleY: 0.38, alpha: 0.07, duration: 1050, ease: "Sine.Out" });
-    const path = new Phaser.Curves.CubicBezier(
-      new Phaser.Math.Vector2(BASE_WIDTH / 2, 690), new Phaser.Math.Vector2(100, 340),
-      new Phaser.Math.Vector2(430, 165), new Phaser.Math.Vector2(BASE_WIDTH / 2, 300),
-    );
-    const follow = { t: 0 };
+    this.ball.setX(BASE_WIDTH / 2);
+    this.tweens.add({ targets: this.ballShadow, scaleX: 0.34, scaleY: 0.34, alpha: 0.05, duration: 720, ease: "Sine.Out" });
     this.tweens.add({
-      targets: follow, t: 1, duration: 1180, ease: "Sine.InOut",
+      targets: this.ball, y: 150, scale: 0.56, duration: 720, ease: "Quad.Out",
       onUpdate: () => {
-        const point = path.getPoint(follow.t);
-        this.ball.setPosition(point.x, point.y);
-        this.ballImage.angle -= 11;
-        this.ball.setScale(1 - follow.t * 0.48);
+        this.ball.x = BASE_WIDTH / 2;
+        this.ballImage.angle -= 8;
       },
-      onComplete: () => this.swish(letter),
+      onComplete: () => {
+        this.ball.setDepth(18);
+        this.time.delayedCall(335, () => this.animateNetState("open", 210));
+        this.tweens.add({
+          targets: this.ball, y: 307, scale: 0.52, duration: 610, ease: "Quad.In",
+          onUpdate: () => {
+            this.ball.x = BASE_WIDTH / 2;
+            this.ballImage.angle -= 8;
+          },
+          onComplete: () => this.swish(letter),
+        });
+      },
     });
   }
 
   swish(letter) {
-    this.ball.setDepth(10);
     this.message.setText("SWISH!");
-    this.tweens.addCounter({
-      from: 1, to: 1.58, duration: 250, yoyo: true,
-      onUpdate: (tween) => this.drawNet(tween.getValue(), Math.sin(tween.progress * Math.PI) * 9),
-    });
+    this.audioSystem.playEffect("swish");
+    this.animateNetState("stretch", 260);
     this.tweens.add({
-      targets: this.ball, y: 410, scale: 0.43, alpha: 0.95, duration: 380, ease: "Quad.In",
-      onUpdate: () => { this.ballImage.angle -= 14; },
+      targets: this.ball, y: 472, scale: 0.46, duration: 310, ease: "Quad.In",
+      onUpdate: () => {
+        this.ball.x = BASE_WIDTH / 2;
+        this.ballImage.angle -= 11;
+      },
       onComplete: () => {
-        this.ball.setAlpha(0);
-        this.cameras.main.shake(90, 0.002);
-        this.time.delayedCall(120, () => this.celebrate(letter));
+        this.animateNetState("snap", 150, () => this.animateNetState("rest", 220));
+        this.tweens.add({
+          targets: this.ball, y: 555, scale: 0.5, alpha: 0, duration: 260, ease: "Quad.In",
+          onUpdate: () => {
+            this.ball.x = BASE_WIDTH / 2;
+            this.ballImage.angle -= 12;
+          },
+          onComplete: () => {
+            this.cameras.main.shake(90, 0.002);
+            this.time.delayedCall(80, () => this.celebrate(letter));
+          },
+        });
       },
     });
   }
@@ -177,33 +244,31 @@ export class LearnLettersScene extends Phaser.Scene {
     this.coins += 1;
     this.coinText.setText(`⭐ ${this.coins}`);
     SaveSystem.saveCoins(this.coins);
+    this.audioSystem.playEffect("celebration");
     this.overlay.setVisible(true).setAlpha(0);
     this.tweens.add({ targets: this.overlay, alpha: 0.72, duration: 180 });
     this.glow.setAlpha(0).setScale(0.3);
     this.tweens.add({ targets: this.glow, alpha: 0.9, scale: 1.15, duration: 500, ease: "Quad.Out" });
-    this.letter.setPosition(BASE_WIDTH / 2, 340).setScale(0.08).setAlpha(1).setAngle(-28);
-    this.letterShadow.setPosition(BASE_WIDTH / 2 + 12, 355).setScale(0.08).setAlpha(0.34).setAngle(-28);
+    this.letterContainer.setPosition(BASE_WIDTH / 2, 332).setScale(0.08).setAlpha(1).setAngle(0);
     const swirl = { t: 0 };
     this.tweens.add({
       targets: swirl, t: 1, duration: 850, ease: "Back.Out",
       onUpdate: () => {
-        const angle = swirl.t * Math.PI * 2.4;
-        const radius = (1 - swirl.t) * 72;
+        const angle = swirl.t * Math.PI * 2;
+        const radius = (1 - swirl.t) * 52;
         const x = BASE_WIDTH / 2 + Math.cos(angle) * radius;
-        const y = 340 + (BASE_HEIGHT / 2 - 340) * swirl.t + Math.sin(angle) * radius * 0.35;
+        const y = 332 + (BASE_HEIGHT / 2 - 332) * swirl.t + Math.sin(angle) * radius * 0.28;
         const scale = 0.08 + swirl.t * 1.04;
-        const rotation = -28 + 28 * swirl.t + Math.sin(angle) * 6;
-        this.letter.setPosition(x, y).setScale(scale).setAngle(rotation);
-        this.letterShadow.setPosition(x + 12, y + 18).setScale(scale).setAngle(rotation);
+        this.letterContainer.setPosition(x, y).setScale(scale).setAngle(0);
       },
-      onComplete: () => this.tweens.add({ targets: [this.letter, this.letterShadow], scale: 1.16, duration: 145, yoyo: true, ease: "Sine.Out" }),
+      onComplete: () => this.tweens.add({ targets: this.letterContainer, scale: 1.16, duration: 145, yoyo: true, ease: "Sine.Out" }),
     });
     createConfetti(this);
     createSparkles(this);
-    this.time.delayedCall(260, () => this.audioSystem.speak(`This is the letter ${letter}!`));
+    this.time.delayedCall(120, () => this.audioSystem.playLetter(letter));
     this.time.delayedCall(2200, () => {
       this.tweens.add({
-        targets: [this.letter, this.letterShadow, this.glow], alpha: 0, scale: 1.25, y: BASE_HEIGHT / 2 - 40, duration: 360,
+        targets: [this.letterContainer, this.glow], alpha: 0, scale: 1.25, y: BASE_HEIGHT / 2 - 40, duration: 360,
         onComplete: () => {
           this.overlay.setVisible(false);
           this.progression.advance();

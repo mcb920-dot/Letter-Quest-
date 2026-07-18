@@ -1,5 +1,6 @@
 const COINS_KEY = "letterQuestHDCoins";
 const PROGRESS_KEY = "letterQuestProgress";
+const MUTED_KEY = "letterQuestMuted";
 
 function readNumber(key, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
   try {
@@ -38,5 +39,22 @@ export const SaveSystem = {
   saveLetterIndex(index) {
     const safeIndex = ((Math.floor(Number(index) || 0) % 26) + 26) % 26;
     return writeNumber(PROGRESS_KEY, safeIndex);
+  },
+
+  getMuted() {
+    try {
+      return window.localStorage.getItem(MUTED_KEY) === "true";
+    } catch {
+      return false;
+    }
+  },
+
+  saveMuted(muted) {
+    try {
+      window.localStorage.setItem(MUTED_KEY, String(Boolean(muted)));
+      return true;
+    } catch {
+      return false;
+    }
   },
 };

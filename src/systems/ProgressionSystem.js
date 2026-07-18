@@ -17,6 +17,10 @@ export class ProgressionSystem {
     return ALPHABET[this.index];
   }
 
+  getNextLetter() {
+    return ALPHABET[this.normalize(this.index + 1)];
+  }
+
   advance() {
     this.index = this.normalize(this.index + 1);
     return this.getCurrentLetter();

@@ -15,8 +15,14 @@ export function createBasketballTexture(scene) {
   gradient.addColorStop(1, "#7e250f");
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.shadowColor = "rgba(0,0,0,.42)";
+  ctx.shadowBlur = 22;
+  ctx.shadowOffsetY = 12;
   ctx.fillStyle = gradient;
   ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
 
   ctx.save();
   ctx.beginPath();
