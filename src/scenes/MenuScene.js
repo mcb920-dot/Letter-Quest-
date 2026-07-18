@@ -120,28 +120,14 @@ export class MenuScene extends Phaser.Scene {
 
     this.themeControls = COURTS.map((court, index) => this.createCourtCard(court, 99 + index * 171));
     this.updateCourtSelection();
-    const playLabel = activity === "letters" ? "PLAY LETTERS" : "NUMBERS 1–20 NEXT";
+    const playLabel = activity === "letters" ? "PLAY LETTERS" : "PLAY NUMBERS";
     this.addArcadeButton(BASE_WIDTH / 2, 820, 350, 74, playLabel, () => {
-      if (activity === "numbers") {
-        this.showNumbersNextMessage();
-        return;
-      }
       this.audioSystem.startMusic();
       this.cameras.main.flash(90, 255, 255, 255, false);
       this.time.delayedCall(75, () => this.scene.start("LearnLettersScene"));
     });
     this.addArcadeButton(66, 55, 74, 52, "‹", () => this.showActivityMenu(), 0x4b2a99);
     this.addSoundControl();
-  }
-
-  showNumbersNextMessage() {
-    const panel = this.add.rectangle(BASE_WIDTH / 2, 820, 390, 82, 0x0d3476, 1)
-      .setStrokeStyle(4, 0xffd54a, 1);
-    const text = this.add.text(BASE_WIDTH / 2, 820, "NUMBER GAMEPLAY IS THE NEXT STEP", {
-      fontFamily: FONT, fontSize: "15px", fontStyle: "bold", color: "#ffffff", align: "center",
-    }).setOrigin(0.5);
-    this.screen.add([panel, text]);
-    this.time.delayedCall(1400, () => this.showCourtMenu());
   }
 
   createCourtCard(court, x) {
