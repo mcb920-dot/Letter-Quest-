@@ -16,6 +16,7 @@ export class LearnLettersScene extends Phaser.Scene {
     this.progression = new ProgressionSystem(SaveSystem.getLetterIndex());
     this.audioSystem = this.registry.get("audioSystem");
     this.drawArcade();
+    this.createNeonLighting();
     this.createAtmosphere();
     this.createHUD();
     this.createHoop();
@@ -33,6 +34,31 @@ export class LearnLettersScene extends Phaser.Scene {
     const polish = this.add.graphics();
     polish.fillGradientStyle(0xffffff, 0xffffff, 0x174b6f, 0x174b6f, rescueTheme ? 0.07 : 0.04);
     polish.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+  }
+
+  createNeonLighting() {
+    const glow = this.add.graphics().setDepth(4).setBlendMode(Phaser.BlendModes.ADD);
+    glow.lineStyle(8, 0x35ddff, 0.3);
+    glow.lineBetween(35, 300, 35, 850);
+    glow.lineBetween(BASE_WIDTH - 35, 300, BASE_WIDTH - 35, 850);
+    glow.lineStyle(3, 0xff4f9a, 0.48);
+    glow.lineBetween(48, 320, 48, 780);
+    glow.lineBetween(BASE_WIDTH - 48, 320, BASE_WIDTH - 48, 780);
+    glow.lineStyle(5, 0xffd84f, 0.3);
+    glow.strokeRoundedRect(127, 205, 286, 82, 14);
+    glow.fillStyle(0x35ddff, 0.08);
+    glow.fillEllipse(BASE_WIDTH / 2, 690, 410, 270);
+    this.tweens.add({ targets: glow, alpha: 0.58, duration: 1250, yoyo: true, repeat: -1, ease: "Sine.InOut" });
+
+    for (let index = 0; index < 8; index += 1) {
+      const color = index % 2 === 0 ? 0x35ddff : 0xff5ca8;
+      const light = this.add.circle(index % 2 === 0 ? 44 : BASE_WIDTH - 44, 330 + index * 65, 3, color, 0.8)
+        .setDepth(5).setBlendMode(Phaser.BlendModes.ADD);
+      this.tweens.add({
+        targets: light, alpha: 0.22, scale: 1.8, duration: 650 + index * 75,
+        yoyo: true, repeat: -1, ease: "Sine.InOut",
+      });
+    }
   }
 
   createAtmosphere() {
@@ -321,12 +347,12 @@ export class LearnLettersScene extends Phaser.Scene {
     this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 750, ease: "Sine.Out" });
     // Two continuous phases model a real shot in screen space: launch beside the goal, then descend through it.
     this.tweens.add({
-      targets: this.ball, x: 360, y: 405, scale: 0.55, duration: 520, ease: "Quad.Out",
+      targets: this.ball, x: 345, y: 400, scale: 0.74, duration: 500, ease: "Quad.Out",
       onUpdate: () => this.advanceBallSpin(0.85),
       onComplete: () => {
         this.animateNetState("open", 150);
         this.tweens.add({
-          targets: this.ball, x: BASE_WIDTH / 2, y: 471, scale: 0.5, duration: 230, ease: "Quad.In",
+          targets: this.ball, x: BASE_WIDTH / 2, y: 471, scale: 0.7, duration: 240, ease: "Quad.In",
           onUpdate: () => this.advanceBallSpin(0.7),
           onComplete: () => this.swish(letter),
         });

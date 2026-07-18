@@ -7,6 +7,7 @@ export class AudioSystem {
     this.synthesis = "speechSynthesis" in window ? window.speechSynthesis : null;
     this.muted = SaveSystem.getMuted();
     this.cache = new Map();
+    this.decodedLetters = new Map();
     this.musicRequested = false;
     this.musicTimer = null;
     this.musicStep = 0;
@@ -151,6 +152,35 @@ export class AudioSystem {
     });
   }
 
+  async playExcitedLetter(path) {
+    if (this.muted || !this.context || this.context.state !== "running") return false;
+    try {
+      let buffer = this.decodedLetters.get(path);
+      if (!buffer) {
+        const response = await fetch(path);
+        if (!response.ok) return false;
+        buffer = await this.context.decodeAudioData(await response.arrayBuffer());
+        this.decodedLetters.set(path, buffer);
+      }
+      const source = this.context.createBufferSource();
+      const gain = this.context.createGain();
+      const now = this.context.currentTime;
+      source.buffer = buffer;
+      // A short rising contour turns the neutral source into an upbeat, lifted delivery.
+      source.playbackRate.setValueAtTime(1.06, now);
+      source.playbackRate.linearRampToValueAtTime(1.18, now + Math.max(0.12, buffer.duration * 0.72));
+      gain.gain.setValueAtTime(0.95, now);
+      gain.gain.linearRampToValueAtTime(1.08, now + 0.06);
+      gain.gain.linearRampToValueAtTime(0.98, now + Math.max(0.14, buffer.duration));
+      source.connect(gain);
+      gain.connect(this.context.destination);
+      source.start(now);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async playLetter(letter) {
     const path = `/audio/letters/${letter.toUpperCase()}.wav`;
     if (missingFiles.has(path)) {
@@ -158,6 +188,7 @@ export class AudioSystem {
       return;
     }
     this.playLetterLift();
+    if (await this.playExcitedLetter(path)) return;
     if (await this.playFile(path)) return;
     this.speak(`${letter.toLowerCase()}!`);
   }
