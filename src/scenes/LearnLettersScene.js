@@ -133,20 +133,56 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   createHoop() {
-    this.add.image(BASE_WIDTH / 2, 455, "premiumGoalV2").setDisplaySize(330, 290).setDepth(20);
-    // Retain the timing model invisibly so existing swish choreography remains stable.
-    this.net = this.add.graphics().setDepth(19).setAlpha(0);
+    const centerX = BASE_WIDTH / 2;
+    this.add.image(centerX, 430, "softGlow").setDisplaySize(360, 300).setTint(0x5fcfff).setAlpha(0.14).setDepth(2);
+
+    // Dimensional shadow and transparent glass board.
+    this.add.rectangle(centerX + 9, 397, 248, 158, 0x031126, 0.52).setDepth(7);
+    this.add.rectangle(centerX, 388, 248, 158, 0x174c70, 0.3)
+      .setStrokeStyle(11, 0x162b4a, 1).setDepth(8);
+    this.add.rectangle(centerX, 388, 232, 142, 0x79d8f2, 0.15)
+      .setStrokeStyle(7, 0xfff1e8, 0.98).setDepth(9);
+    this.add.rectangle(centerX, 422, 78, 52, 0xffffff, 0)
+      .setStrokeStyle(6, 0xff7957, 1).setDepth(10);
+    const glass = this.add.graphics().setDepth(9);
+    glass.fillStyle(0xffffff, 0.12);
+    glass.fillTriangle(centerX - 106, 321, centerX - 48, 321, centerX - 98, 454);
+    glass.fillStyle(0xffffff, 0.07);
+    glass.fillTriangle(centerX + 38, 321, centerX + 105, 321, centerX + 72, 454);
+    [[centerX - 104, 329], [centerX + 104, 329], [centerX - 104, 447], [centerX + 104, 447]].forEach(([x, y]) => {
+      this.add.circle(x, y, 5, 0xd9eff7, 0.9).setStrokeStyle(2, 0x38546e).setDepth(10);
+    });
+
+    // Rear rim stays behind the ball; front rim is drawn later above it.
+    this.rearRim = this.add.graphics().setDepth(12);
+    this.rearRim.lineStyle(13, 0x7b220f, 0.45);
+    this.rearRim.strokeEllipse(centerX, 474, 122, 30);
+    this.rearRim.lineStyle(9, 0xd94718, 1);
+    this.rearRim.strokeEllipse(centerX, 470, 118, 27);
+
+    this.net = this.add.graphics().setDepth(20);
     this.drawNetState("rest");
+    this.frontRim = this.add.graphics().setDepth(26);
+    this.frontRim.lineStyle(11, 0x9f2c12, 1);
+    this.frontRim.beginPath();
+    this.frontRim.moveTo(centerX - 59, 471);
+    for (let step = 1; step <= 24; step += 1) {
+      const angle = Math.PI - (Math.PI * step) / 24;
+      this.frontRim.lineTo(centerX + Math.cos(angle) * 59, 471 + Math.sin(angle) * 13.5);
+    }
+    this.frontRim.strokePath();
+    this.frontRim.lineStyle(3, 0xff9a58, 0.95);
+    this.frontRim.strokeEllipse(centerX, 467, 112, 21);
   }
 
   getNetShape(state = "rest") {
     const states = {
-      rest: { topWidth: 48, upperWidth: 35, waistWidth: 25, bottomWidth: 22, bottom: 392 },
-      open: { topWidth: 51, upperWidth: 40, waistWidth: 29, bottomWidth: 22, bottom: 398 },
-      expanded: { topWidth: 52, upperWidth: 44, waistWidth: 34, bottomWidth: 23, bottom: 404 },
-      stretch: { topWidth: 51, upperWidth: 42, waistWidth: 31, bottomWidth: 18, bottom: 417 },
-      narrow: { topWidth: 49, upperWidth: 36, waistWidth: 23, bottomWidth: 15, bottom: 406 },
-      snap: { topWidth: 48, upperWidth: 32, waistWidth: 20, bottomWidth: 24, bottom: 384 },
+      rest: { topWidth: 50, upperWidth: 38, waistWidth: 27, bottomWidth: 23, bottom: 558 },
+      open: { topWidth: 53, upperWidth: 43, waistWidth: 31, bottomWidth: 23, bottom: 563 },
+      expanded: { topWidth: 54, upperWidth: 47, waistWidth: 36, bottomWidth: 24, bottom: 570 },
+      stretch: { topWidth: 53, upperWidth: 45, waistWidth: 33, bottomWidth: 19, bottom: 582 },
+      narrow: { topWidth: 51, upperWidth: 39, waistWidth: 25, bottomWidth: 16, bottom: 571 },
+      snap: { topWidth: 50, upperWidth: 35, waistWidth: 22, bottomWidth: 25, bottom: 549 },
     };
     return { ...(states[state] || states.rest) };
   }
@@ -158,7 +194,7 @@ export class LearnLettersScene extends Phaser.Scene {
 
   drawNetShape(shape) {
     this.net.clear();
-    const top = 315;
+    const top = 479;
     const widthAt = (t) => {
       let width;
       if (t < 0.3) width = Phaser.Math.Linear(shape.topWidth, shape.upperWidth, t / 0.3);
@@ -166,9 +202,28 @@ export class LearnLettersScene extends Phaser.Scene {
       else width = Phaser.Math.Linear(shape.waistWidth, shape.bottomWidth, (t - 0.67) / 0.33);
       return width;
     };
-    this.net.lineStyle(1.8, 0xe9edf1, 0.94);
+    this.net.lineStyle(3.2, 0x8b8f96, 0.45);
     const rows = 7;
     const columns = 8;
+    for (let row = 0; row < rows; row += 1) {
+      const t1 = row / rows;
+      const t2 = (row + 1) / rows;
+      const y1 = Phaser.Math.Linear(top, shape.bottom, t1);
+      const y2 = Phaser.Math.Linear(top, shape.bottom, t2);
+      const width1 = widthAt(t1);
+      const width2 = widthAt(t2);
+      for (let column = 0; column <= columns; column += 1) {
+        const ratio = column / columns;
+        const x1 = Phaser.Math.Linear(BASE_WIDTH / 2 - width1, BASE_WIDTH / 2 + width1, ratio);
+        const leftRatio = Math.max(0, ratio - 0.5 / columns);
+        const rightRatio = Math.min(1, ratio + 0.5 / columns);
+        const leftX = Phaser.Math.Linear(BASE_WIDTH / 2 - width2, BASE_WIDTH / 2 + width2, leftRatio);
+        const rightX = Phaser.Math.Linear(BASE_WIDTH / 2 - width2, BASE_WIDTH / 2 + width2, rightRatio);
+        this.net.lineBetween(x1 + 1.2, y1 + 1.2, leftX + 1.2, y2 + 1.2);
+        this.net.lineBetween(x1 + 1.2, y1 + 1.2, rightX + 1.2, y2 + 1.2);
+      }
+    }
+    this.net.lineStyle(2.2, 0xf7f1e8, 0.98);
     for (let row = 0; row < rows; row += 1) {
       const t1 = row / rows;
       const t2 = (row + 1) / rows;
