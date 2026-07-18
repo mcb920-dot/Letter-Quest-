@@ -1,22 +1,15 @@
-export const BASKETBALL_SPIN_FRAMES = 12;
-
 export function createBasketballTexture(scene) {
   const sphere = createSphereCanvas();
   scene.textures.addCanvas("basketballSphere", sphere);
-
-  const seamFrames = [];
-  for (let frame = 0; frame < BASKETBALL_SPIN_FRAMES; frame += 1) {
-    const seams = createSeamCanvas(frame / BASKETBALL_SPIN_FRAMES);
-    seamFrames.push(seams);
-    scene.textures.addCanvas(`basketballSeams${frame}`, seams);
-  }
+  const seams = createSeamCanvas();
+  scene.textures.addCanvas("basketballSeams", seams);
 
   // Static composite retained for the decorative menu basketball.
   const composite = document.createElement("canvas");
   composite.width = composite.height = 512;
   const compositeContext = composite.getContext("2d");
   compositeContext.drawImage(sphere, 0, 0);
-  compositeContext.drawImage(seamFrames[0], 0, 0);
+  compositeContext.drawImage(seams, 0, 0);
   scene.textures.addCanvas("basketballHD", composite);
 }
 
@@ -87,11 +80,10 @@ function createSphereCanvas() {
   return canvas;
 }
 
-function createSeamCanvas(progress) {
+function createSeamCanvas() {
   const size = 512;
   const center = size / 2;
   const radius = 216;
-  const phase = progress * Math.PI * 2;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext("2d");
@@ -105,34 +97,22 @@ function createSeamCanvas(progress) {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // Moving projected great circles: their curvature and position change per frame.
-  const drift = Math.sin(phase) * 88;
-  const bend = Math.cos(phase) * 122;
+  // A stable, recognizable basketball channel pattern. Only this layer spins.
   ctx.beginPath();
-  ctx.moveTo(center + drift * 0.22, center - radius);
-  ctx.bezierCurveTo(center + drift + bend, center - 95, center + drift - bend, center + 95, center + drift * 0.22, center + radius);
+  ctx.moveTo(center, center - radius);
+  ctx.bezierCurveTo(center - 42, center - 108, center + 42, center + 108, center, center + radius);
   ctx.stroke();
-
-  const secondPhase = phase + Math.PI / 2;
-  const driftTwo = Math.sin(secondPhase) * 132;
-  const bendTwo = Math.cos(secondPhase) * 76;
   ctx.beginPath();
-  ctx.moveTo(center - radius * 0.72, center - radius * 0.7 + driftTwo * 0.16);
-  ctx.bezierCurveTo(center - 82, center + driftTwo + bendTwo, center + 82, center + driftTwo - bendTwo, center + radius * 0.72, center + radius * 0.7 + driftTwo * 0.16);
+  ctx.moveTo(center - radius, center);
+  ctx.bezierCurveTo(center - 85, center - 35, center + 85, center + 35, center + radius, center);
   ctx.stroke();
-
-  const equatorLift = Math.sin(phase + Math.PI * 0.3) * 48;
-  const equatorTilt = Math.cos(phase) * 34;
   ctx.beginPath();
-  ctx.moveTo(center - radius, center + equatorLift - equatorTilt);
-  ctx.bezierCurveTo(center - 70, center + equatorLift + 30, center + 70, center + equatorLift - 30, center + radius, center + equatorLift + equatorTilt);
+  ctx.moveTo(center - radius * 0.72, center - radius * 0.7);
+  ctx.bezierCurveTo(center - 42, center - 65, center - 42, center + 65, center - radius * 0.72, center + radius * 0.7);
   ctx.stroke();
-
-  // A faint near-side seam highlight gives the channels physical depth.
-  ctx.globalAlpha = 0.28;
-  ctx.strokeStyle = "#ffb060";
-  ctx.lineWidth = 3;
-  ctx.translate(-3, -3);
+  ctx.beginPath();
+  ctx.moveTo(center + radius * 0.72, center - radius * 0.7);
+  ctx.bezierCurveTo(center + 42, center - 65, center + 42, center + 65, center + radius * 0.72, center + radius * 0.7);
   ctx.stroke();
   ctx.restore();
   return canvas;

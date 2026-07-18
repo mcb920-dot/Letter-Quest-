@@ -11,45 +11,45 @@ export class MenuScene extends Phaser.Scene {
     this.drawArcadeBackground();
     this.createAmbientLights();
 
-    this.add.text(BASE_WIDTH / 2, 168, "Basketball\nLetters", {
+    this.add.text(BASE_WIDTH / 2, 158, "Basketball\nLetters", {
       fontFamily: "Arial Rounded MT Bold, Arial",
-      fontSize: "58px",
+      fontSize: "48px",
       fontStyle: "bold",
       align: "center",
-      lineSpacing: -6,
+      lineSpacing: -3,
       color: "#ffffff",
       stroke: "#09102d",
-      strokeThickness: 12,
-      shadow: { offsetX: 0, offsetY: 8, color: "#07102a", blur: 12, fill: true },
+      strokeThickness: 9,
+      shadow: { offsetX: 0, offsetY: 6, color: "#07102a", blur: 10, fill: true },
     }).setOrigin(0.5);
 
-    this.add.text(BASE_WIDTH / 2, 288, "Shoot. Swish. Learn.", {
-      fontFamily: "Arial", fontSize: "23px", fontStyle: "bold", color: "#bff8ff",
+    this.add.text(BASE_WIDTH / 2, 268, "Shoot. Swish. Learn.", {
+      fontFamily: "Arial", fontSize: "20px", fontStyle: "bold", color: "#bff8ff",
     }).setOrigin(0.5);
 
-    const ballGlow = this.add.image(BASE_WIDTH / 2, 486, "softGlow")
-      .setDisplaySize(350, 350).setTint(0x58dff4).setAlpha(0.42);
+    const ballGlow = this.add.image(BASE_WIDTH / 2, 438, "softGlow")
+      .setDisplaySize(292, 292).setTint(0x58dff4).setAlpha(0.34);
     this.tweens.add({ targets: ballGlow, alpha: 0.62, scale: 1.08, duration: 1500, yoyo: true, repeat: -1, ease: "Sine.InOut" });
 
-    const ballShadow = this.add.ellipse(BASE_WIDTH / 2, 600, 210, 42, 0x020513, 0.42);
-    const ball = this.add.image(BASE_WIDTH / 2, 474, "basketballHD").setDisplaySize(245, 245);
+    const ballShadow = this.add.ellipse(BASE_WIDTH / 2, 535, 172, 34, 0x020513, 0.4);
+    const ball = this.add.image(BASE_WIDTH / 2, 430, "basketballHD").setDisplaySize(200, 200);
     this.tweens.add({
-      targets: ball, y: 464, angle: -3, duration: 1800, yoyo: true, repeat: -1, ease: "Sine.InOut",
-      onUpdate: () => ballShadow.setScale(1 + (ball.y - 474) * 0.006, 1).setAlpha(0.42 + (ball.y - 474) * 0.006),
+      targets: ball, y: 421, angle: -2, duration: 1800, yoyo: true, repeat: -1, ease: "Sine.InOut",
+      onUpdate: () => ballShadow.setScale(1 + (ball.y - 430) * 0.005, 1).setAlpha(0.4 + (ball.y - 430) * 0.005),
     });
 
     const buttonShadow = this.add.graphics();
     buttonShadow.fillStyle(0x020718, 0.38);
-    buttonShadow.fillRoundedRect(86, 700, 368, 92, 30);
+    buttonShadow.fillRoundedRect(100, 675, 340, 82, 27);
     const button = this.add.graphics();
     button.fillGradientStyle(0xff8a72, 0xff8a72, 0xf04468, 0xf04468, 1);
-    button.fillRoundedRect(86, 690, 368, 92, 30);
+    button.fillRoundedRect(100, 666, 340, 82, 27);
     button.lineStyle(4, 0xffffff, 0.32);
-    button.strokeRoundedRect(86, 690, 368, 92, 30);
-    button.setInteractive(new Phaser.Geom.Rectangle(86, 690, 368, 92), Phaser.Geom.Rectangle.Contains);
+    button.strokeRoundedRect(100, 666, 340, 82, 27);
+    button.setInteractive(new Phaser.Geom.Rectangle(100, 666, 340, 82), Phaser.Geom.Rectangle.Contains);
 
-    const playLabel = this.add.text(BASE_WIDTH / 2, 735, "PLAY", {
-      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "32px", fontStyle: "bold", color: "#ffffff",
+    const playLabel = this.add.text(BASE_WIDTH / 2, 707, "PLAY", {
+      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "28px", fontStyle: "bold", color: "#ffffff",
       stroke: "#a52d4c", strokeThickness: 4,
     }).setOrigin(0.5);
 

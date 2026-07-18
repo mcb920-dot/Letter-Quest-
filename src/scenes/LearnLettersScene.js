@@ -1,7 +1,6 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/gameConfig.js";
 import { createConfetti, createSparkles } from "../game/createConfetti.js";
-import { BASKETBALL_SPIN_FRAMES } from "../game/createBasketballTexture.js";
 import { createLetterEffects, setBubbleLetter } from "../game/createLetterEffects.js";
 import { ProgressionSystem } from "../systems/ProgressionSystem.js";
 import { SaveSystem } from "../systems/SaveSystem.js";
@@ -119,11 +118,11 @@ export class LearnLettersScene extends Phaser.Scene {
   getNetShape(state = "rest") {
     const states = {
       rest: { topWidth: 48, upperWidth: 35, waistWidth: 25, bottomWidth: 22, bottom: 405 },
-      open: { topWidth: 55, upperWidth: 50, waistWidth: 38, bottomWidth: 25, bottom: 416 },
-      expanded: { topWidth: 56, upperWidth: 54, waistWidth: 48, bottomWidth: 30, bottom: 435 },
-      stretch: { topWidth: 54, upperWidth: 50, waistWidth: 43, bottomWidth: 19, bottom: 478 },
-      narrow: { topWidth: 50, upperWidth: 38, waistWidth: 26, bottomWidth: 14, bottom: 456 },
-      snap: { topWidth: 48, upperWidth: 30, waistWidth: 17, bottomWidth: 27, bottom: 386 },
+      open: { topWidth: 51, upperWidth: 40, waistWidth: 29, bottomWidth: 22, bottom: 410 },
+      expanded: { topWidth: 52, upperWidth: 44, waistWidth: 34, bottomWidth: 23, bottom: 417 },
+      stretch: { topWidth: 51, upperWidth: 42, waistWidth: 31, bottomWidth: 18, bottom: 432 },
+      narrow: { topWidth: 49, upperWidth: 36, waistWidth: 23, bottomWidth: 15, bottom: 421 },
+      snap: { topWidth: 48, upperWidth: 32, waistWidth: 20, bottomWidth: 24, bottom: 397 },
     };
     return { ...(states[state] || states.rest) };
   }
@@ -183,25 +182,18 @@ export class LearnLettersScene extends Phaser.Scene {
     this.ballShadow = this.add.ellipse(BASE_WIDTH / 2, 790, 180, 42, 0x000000, 0.28).setDepth(15);
     this.ball = this.add.container(BASE_WIDTH / 2, 690).setDepth(24);
     this.ballSphere = this.add.image(0, 0, "basketballSphere").setDisplaySize(170, 170);
-    this.ballSeams = this.add.image(0, 0, "basketballSeams0").setDisplaySize(170, 170);
+    this.ballSeams = this.add.image(0, 0, "basketballSeams").setDisplaySize(170, 170);
     this.ballLetter = this.add.text(0, 2, "A", {
       fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "68px", fontStyle: "bold",
       color: "#ffffff", stroke: "#7a2b17", strokeThickness: 9,
     }).setOrigin(0.5);
     this.ball.add([this.ballSphere, this.ballSeams, this.ballLetter]);
-    this.spinFrame = 0;
-    this.spinElapsed = 0;
     this.ball.setSize(180, 180).setInteractive({ useHandCursor: true });
     this.ball.on("pointerdown", () => this.shoot());
   }
 
   advanceBallSpin(speed = 1) {
-    this.spinElapsed += this.game.loop.delta * speed;
-    if (this.spinElapsed < 46) return;
-    const steps = Math.max(1, Math.floor(this.spinElapsed / 46));
-    this.spinElapsed %= 46;
-    this.spinFrame = (this.spinFrame - steps + BASKETBALL_SPIN_FRAMES * 2) % BASKETBALL_SPIN_FRAMES;
-    this.ballSeams.setTexture(`basketballSeams${this.spinFrame}`);
+    this.ballSeams.angle -= (this.game.loop.delta / 16.67) * 2.15 * speed;
   }
 
   prepareRound() {
@@ -213,9 +205,7 @@ export class LearnLettersScene extends Phaser.Scene {
     setBubbleLetter(this, letter, colors[index % colors.length]);
     this.letterContainer.setAlpha(0).setScale(0.08).setAngle(0);
     this.ball.setPosition(BASE_WIDTH / 2, 690).setScale(1).setAlpha(1).setDepth(24);
-    this.spinFrame = 0;
-    this.spinElapsed = 0;
-    this.ballSeams.setTexture("basketballSeams0");
+    this.ballSeams.setAngle(0);
     this.ballLetter.setAngle(0);
     this.ballShadow.setPosition(BASE_WIDTH / 2, 790).setScale(1).setAlpha(0.28);
     this.drawNetState("rest");
