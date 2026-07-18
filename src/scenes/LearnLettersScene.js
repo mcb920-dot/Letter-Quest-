@@ -273,10 +273,9 @@ export class LearnLettersScene extends Phaser.Scene {
         // One uninterrupted arc from the child's hand directly into the rim.
         this.ball.y = inverse * inverse * 748 + 2 * inverse * t * -240 + t * t * 307;
         this.ball.setScale(Phaser.Math.Linear(1, 0.5, t));
-        this.advanceBallSpin(0.42);
-        if (!enteredHoop && t >= 0.92) {
+        this.advanceBallSpin(0.9);
+        if (!enteredHoop && t >= 0.97) {
           enteredHoop = true;
-          this.ball.setDepth(18);
           this.animateNetState("open", 150);
         }
       },
@@ -285,6 +284,7 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   swish(letter) {
+    let passedRim = false;
     this.animateNetState("expanded", 105, () => this.animateNetState("stretch", 230));
     this.time.delayedCall(145, () => {
       this.message.setText("SWISH!");
@@ -295,21 +295,26 @@ export class LearnLettersScene extends Phaser.Scene {
       targets: this.ball, y: 410, scale: 0.48, duration: 185, ease: "Quad.In",
       onUpdate: () => {
         this.ball.x = BASE_WIDTH / 2;
-        this.advanceBallSpin(0.42);
+        this.advanceBallSpin(0.72);
+        if (!passedRim && this.ball.y >= 326) {
+          passedRim = true;
+          // Only move behind the illustrated net after the ball has crossed the front rim.
+          this.ball.setDepth(18);
+        }
       },
       onComplete: () => {
         this.tweens.add({
           targets: this.ball, y: 478, scale: 0.46, duration: 190, ease: "Quad.In",
           onUpdate: () => {
             this.ball.x = BASE_WIDTH / 2;
-            this.advanceBallSpin(0.28);
+            this.advanceBallSpin(0.55);
           },
           onComplete: () => {
             this.ball.setDepth(22);
             this.animateNetState("narrow", 145);
             this.tweens.add({
               targets: this.ball, y: 565, scale: 0.49, duration: 225, ease: "Quad.In",
-              onUpdate: () => this.advanceBallSpin(0.12),
+              onUpdate: () => this.advanceBallSpin(0.3),
               onComplete: () => {
                 this.animateNetState("snap", 140, () => this.animateNetState("rest", 230));
                 this.tweens.add({
