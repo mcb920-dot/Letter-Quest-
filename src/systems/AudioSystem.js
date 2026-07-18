@@ -89,7 +89,7 @@ export class AudioSystem {
   async playLetter(letter) {
     const path = `/audio/letters/${letter.toUpperCase()}.mp3`;
     if (await this.playFile(path)) return;
-    this.speak(`This is the letter ${letter.toUpperCase()}!`);
+    this.speak(letter.toUpperCase());
   }
 
   pickVoice() {

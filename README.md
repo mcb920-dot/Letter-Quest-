@@ -33,4 +33,4 @@ The game currently generates its artwork at runtime, so empty asset and audio fo
 
 ## Narration and sound files
 
-Letter Quest looks for original narration at `public/audio/letters/A.mp3` through `Z.mp3`, plus `tap.mp3`, `swish.mp3`, and `celebration.mp3` in `public/audio/effects/`. These files are intentionally not included yet. Missing files are logged clearly and letter narration falls back to browser speech synthesis. Final narration should use an original warm, energetic preschool-teacher performance and must not imitate a real person.
+Letter Quest looks for original narration at `public/audio/letters/A.mp3` through `Z.mp3`, plus `tap.mp3`, `swish.mp3`, and `celebration.mp3` in `public/audio/effects/`. Each narration file should speak only its letter name (for example, “A”), without an introductory phrase. These files are intentionally not included yet. Missing files are logged clearly and letter narration falls back to browser speech synthesis. Final narration should use an original warm, energetic preschool-teacher performance and must not imitate a real person.

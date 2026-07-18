@@ -56,7 +56,7 @@ export class LearnLettersScene extends Phaser.Scene {
 
   createHUD() {
     this.add.text(BASE_WIDTH / 2, 34, "BASKETBALL LETTERS", {
-      fontFamily: "Arial", fontSize: "30px", fontStyle: "bold", color: "#ffffff", stroke: "#090e25", strokeThickness: 8,
+      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "25px", fontStyle: "bold", color: "#ffffff", stroke: "#090e25", strokeThickness: 7,
     }).setOrigin(0.5);
     this.add.text(BASE_WIDTH / 2, 75, "Tap the ball • Watch it swish", {
       fontFamily: "Arial", fontSize: "18px", fontStyle: "bold", color: "#c7f7ff",
@@ -97,9 +97,7 @@ export class LearnLettersScene extends Phaser.Scene {
     this.add.rectangle(BASE_WIDTH / 2 + 80, 616, 154, 22, 0x4b5675).setDepth(3);
     this.rearRim = this.add.graphics().setDepth(12);
     this.rearRim.lineStyle(9, 0xc93f20, 1);
-    this.rearRim.beginPath();
-    this.rearRim.arc(BASE_WIDTH / 2, 307, 55, Math.PI, Math.PI * 2, false);
-    this.rearRim.strokePath();
+    this.rearRim.strokeEllipse(BASE_WIDTH / 2, 307, 110, 25);
 
     // The ball drops behind these net strands and the front half of the rim.
     this.net = this.add.graphics().setDepth(20);
@@ -107,7 +105,8 @@ export class LearnLettersScene extends Phaser.Scene {
     this.frontRim = this.add.graphics().setDepth(26);
     this.frontRim.lineStyle(9, 0xff6d31, 1);
     this.frontRim.beginPath();
-    this.frontRim.arc(BASE_WIDTH / 2, 307, 55, 0, Math.PI, false);
+    this.frontRim.moveTo(BASE_WIDTH / 2 - 55, 307);
+    this.frontRim.bezierCurveTo(BASE_WIDTH / 2 - 34, 323, BASE_WIDTH / 2 + 34, 323, BASE_WIDTH / 2 + 55, 307);
     this.frontRim.strokePath();
   }
 
