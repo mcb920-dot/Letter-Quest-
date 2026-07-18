@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" role="img" aria-label="Basketball Learning">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff17a"/>
+      <stop offset="0.42" stop-color="#ffbd19"/>
+      <stop offset="1" stop-color="#f07800"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1674de"/>
+      <stop offset="1" stop-color="#073e9c"/>
+    </linearGradient>
+    <linearGradient id="ivory" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e9e3d8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="7" flood-color="#04143d" flood-opacity=".8"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <path d="M100 324 Q600 252 1100 324 L1060 510 Q600 560 140 510 Z" fill="#03245f" stroke="#ffad00" stroke-width="18"/>
+    <path d="M126 330 Q600 275 1074 330 L1044 475 Q600 520 156 475 Z" fill="url(#blue)" stroke="#0051b8" stroke-width="12"/>
+    <text x="600" y="292" text-anchor="middle" textLength="1080" lengthAdjust="spacingAndGlyphs"
+      font-family="Arial Black, Arial, sans-serif" font-size="190" font-weight="900"
+      fill="#a93600" stroke="#7d2100" stroke-width="30" paint-order="stroke">BASKETBALL</text>
+    <text x="600" y="270" text-anchor="middle" textLength="1080" lengthAdjust="spacingAndGlyphs"
+      font-family="Arial Black, Arial, sans-serif" font-size="190" font-weight="900"
+      fill="url(#gold)" stroke="#ffdf4a" stroke-width="8" paint-order="stroke">BASKETBALL</text>
+    <text x="600" y="455" text-anchor="middle" textLength="720" lengthAdjust="spacingAndGlyphs"
+      font-family="Arial Black, Arial, sans-serif" font-size="128" font-weight="900"
+      fill="#bcb6aa" stroke="#041c53" stroke-width="26" paint-order="stroke">LEARNING</text>
+    <text x="600" y="440" text-anchor="middle" textLength="720" lengthAdjust="spacingAndGlyphs"
+      font-family="Arial Black, Arial, sans-serif" font-size="128" font-weight="900"
+      fill="url(#ivory)" stroke="#ffffff" stroke-width="4" paint-order="stroke">LEARNING</text>
+    <g fill="#ffd029" stroke="#e27800" stroke-width="10">
+      <path d="M112 369l15 32 35 4-26 24 7 35-31-17-31 17 7-35-26-24 35-4z"/>
+      <path d="M1088 369l15 32 35 4-26 24 7 35-31-17-31 17 7-35-26-24 35-4z"/>
+    </g>
+  </g>
+</svg>

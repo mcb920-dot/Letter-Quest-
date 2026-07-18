@@ -9,7 +9,7 @@ export class BootScene extends Phaser.Scene {
 
   preload() {
     this.load.image("premiumMenu", "/assets/ui/premium-menu.png");
-    this.load.image("basketballLearningLogo", "/assets/ui/basketball-learning-logo.png");
+    this.load.svg("basketballLearningLogo", "/assets/ui/basketball-learning-logo.svg", { width: 1200, height: 600 });
     for (const theme of ["open-court", "classic-arcade", "pup-arcade"]) {
       this.load.image(`${theme}-background`, `/assets/${theme}/background.png`);
       this.load.image(`${theme}-backboard`, `/assets/${theme}/backboard.png`);
