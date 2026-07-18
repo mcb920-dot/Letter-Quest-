@@ -1,6 +1,10 @@
 import { SaveSystem } from "./SaveSystem.js";
 
 const missingFiles = new Set();
+const NUMBER_WORDS = [
+  "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+  "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
+];
 
 export class AudioSystem {
   constructor() {
@@ -191,6 +195,12 @@ export class AudioSystem {
     if (await this.playExcitedLetter(path)) return;
     if (await this.playFile(path)) return;
     this.speak(`${letter.toLowerCase()}!`);
+  }
+
+  playNumber(number) {
+    const value = Number(number);
+    this.playLetterLift();
+    this.speak(`${NUMBER_WORDS[value] || value}!`);
   }
 
   pickVoice() {
