@@ -20,6 +20,7 @@ export class LearnLettersScene extends Phaser.Scene {
     this.createHoop();
     this.createBall();
     Object.assign(this, createLetterEffects(this));
+    this.createHomeControl();
     this.createSoundControl();
     this.prepareRound();
   }
@@ -75,8 +76,8 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   createSoundControl() {
-    const background = this.add.circle(42, 44, 25, 0xffffff, 0.94).setDepth(64);
-    this.soundLabel = this.add.text(42, 44, "", { fontFamily: "Arial", fontSize: "19px", color: "#111735" })
+    const background = this.add.circle(96, 44, 23, 0xffffff, 0.94).setDepth(64);
+    this.soundLabel = this.add.text(96, 44, "", { fontFamily: "Arial", fontSize: "18px", color: "#111735" })
       .setOrigin(0.5).setDepth(65);
     background.setInteractive({ useHandCursor: true });
     const update = () => this.soundLabel.setText(this.audioSystem.isMuted() ? "🔇" : "🔊");
@@ -85,6 +86,19 @@ export class LearnLettersScene extends Phaser.Scene {
       this.audioSystem.unlock();
       this.audioSystem.toggleMuted();
       update();
+    });
+  }
+
+  createHomeControl() {
+    const background = this.add.circle(40, 44, 23, 0xffffff, 0.94).setDepth(64);
+    this.add.text(40, 42, "⌂", {
+      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "26px", fontStyle: "bold", color: "#111735",
+    }).setOrigin(0.5).setDepth(65);
+    background.setInteractive({ useHandCursor: true });
+    background.on("pointerdown", () => {
+      this.audioSystem.unlock();
+      this.audioSystem.playEffect("tap");
+      this.scene.start("MenuScene");
     });
   }
 

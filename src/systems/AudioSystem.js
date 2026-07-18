@@ -40,6 +40,12 @@ export class AudioSystem {
     const audio = new Audio();
     audio.muted = true;
     audio.play().catch(() => {});
+    if (this.synthesis && "SpeechSynthesisUtterance" in window) {
+      this.synthesis.cancel();
+      const primer = new SpeechSynthesisUtterance(" ");
+      primer.volume = 0;
+      this.synthesis.speak(primer);
+    }
   }
 
   getAudio(path) {
@@ -88,6 +94,10 @@ export class AudioSystem {
 
   async playLetter(letter) {
     const path = `/audio/letters/${letter.toUpperCase()}.mp3`;
+    if (missingFiles.has(path)) {
+      this.speak(`${letter.toLowerCase()}!`);
+      return;
+    }
     if (await this.playFile(path)) return;
     this.speak(`${letter.toLowerCase()}!`);
   }
@@ -110,8 +120,8 @@ export class AudioSystem {
     if (this.muted || !this.synthesis || !("SpeechSynthesisUtterance" in window)) return;
     this.synthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.94;
-    utterance.pitch = 1.38;
+    utterance.rate = 1.04;
+    utterance.pitch = 1.3;
     utterance.volume = 1;
     const voice = this.pickVoice();
     if (voice) utterance.voice = voice;
