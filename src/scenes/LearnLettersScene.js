@@ -1,6 +1,5 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/gameConfig.js";
-import { BASKETBALL_SPIN_FRAMES } from "../game/createBasketballTexture.js";
 import { createConfetti, createSparkles } from "../game/createConfetti.js";
 import { createLetterEffects, setBubbleLetter } from "../game/createLetterEffects.js";
 import { ProgressionSystem } from "../systems/ProgressionSystem.js";
@@ -29,54 +28,11 @@ export class LearnLettersScene extends Phaser.Scene {
 
   drawArcade() {
     const rescueTheme = SaveSystem.getTheme() === "rescue";
-    if (rescueTheme) {
-      this.add.image(BASE_WIDTH / 2, BASE_HEIGHT / 2, "rescueClubhouseCourt")
-        .setDisplaySize(BASE_WIDTH, BASE_HEIGHT);
-      const polish = this.add.graphics();
-      polish.fillGradientStyle(0xffffff, 0xffffff, 0x174b6f, 0x174b6f, 0.07);
-      polish.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-      return;
-    }
-    const graphics = this.add.graphics();
-    graphics.fillGradientStyle(0x73cef4, 0x8fddf8, 0xdff5ff, 0xc9edff, 1);
-    graphics.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-    graphics.fillStyle(0x27558a, 0.96);
-    graphics.fillRoundedRect(30, 92, BASE_WIDTH - 60, 790, 42);
-    graphics.lineStyle(8, 0xffffff, 0.9);
-    graphics.strokeRoundedRect(30, 92, BASE_WIDTH - 60, 790, 42);
-    graphics.lineStyle(5, 0xff6f78, 0.9);
-    graphics.lineBetween(0, 245, 54, 290);
-    graphics.lineBetween(54, 290, 54, 785);
-    graphics.lineBetween(BASE_WIDTH, 245, BASE_WIDTH - 54, 290);
-    graphics.lineBetween(BASE_WIDTH - 54, 290, BASE_WIDTH - 54, 785);
-    graphics.fillGradientStyle(0xe9a45d, 0xd89055, 0x8c4f35, 0x75412f, 0.98);
-    graphics.fillTriangle(42, 900, BASE_WIDTH - 42, 900, BASE_WIDTH / 2, 350);
-    graphics.fillStyle(0xffe0a4, 0.12);
-    graphics.fillTriangle(88, 900, BASE_WIDTH / 2, 350, BASE_WIDTH / 2, 900);
-    graphics.lineStyle(2, 0xffe0ad, 0.3);
-    for (let y = 505; y <= 900; y += 58) {
-      const halfWidth = Phaser.Math.Linear(54, 230, (y - 350) / 550);
-      graphics.lineBetween(BASE_WIDTH / 2 - halfWidth, y, BASE_WIDTH / 2 + halfWidth, y);
-    }
-    graphics.lineStyle(2, 0x7d422f, 0.2);
-    for (let x = 92; x <= BASE_WIDTH - 92; x += 58) graphics.lineBetween(BASE_WIDTH / 2, 350, x, 900);
-    graphics.lineStyle(4, 0xfff0c9, 0.45);
-    graphics.lineBetween(BASE_WIDTH / 2, 430, 160, 900);
-    graphics.lineBetween(BASE_WIDTH / 2, 430, BASE_WIDTH - 160, 900);
-    for (let i = 0; i < 42; i += 1) {
-      const dotColors = [0xffffff, 0xffd95a, 0xff8290, 0x73e5d1];
-      graphics.fillStyle(Phaser.Utils.Array.GetRandom(dotColors), Phaser.Math.FloatBetween(0.12, 0.48));
-      graphics.fillCircle(Phaser.Math.Between(20, BASE_WIDTH - 20), Phaser.Math.Between(95, 470), Phaser.Math.Between(1, 4));
-    }
-
-    // Original kid-friendly gym pennants.
-    const pennantColors = [0xff6f78, 0xffd95a, 0x73e5d1, 0x9a8cff];
-    for (let index = 0; index < 7; index += 1) {
-      const x = 76 + index * 65;
-      graphics.fillStyle(pennantColors[index % pennantColors.length], 0.9);
-      graphics.fillTriangle(x, 120, x + 34, 120, x + 17, 146);
-    }
-
+    this.add.image(BASE_WIDTH / 2, BASE_HEIGHT / 2, rescueTheme ? "rescueClubhouseCourt" : "sunnyGymCourt")
+      .setDisplaySize(BASE_WIDTH, BASE_HEIGHT);
+    const polish = this.add.graphics();
+    polish.fillGradientStyle(0xffffff, 0xffffff, 0x174b6f, 0x174b6f, rescueTheme ? 0.07 : 0.04);
+    polish.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
   }
 
   createAtmosphere() {
@@ -169,37 +125,10 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   createHoop() {
-    // Backboard and support are the rear-most hoop elements.
-    this.add.image(BASE_WIDTH / 2, 285, "softGlow").setDisplaySize(360, 360).setTint(0x69dcff).setAlpha(0.16).setDepth(2);
-    this.add.rectangle(BASE_WIDTH / 2 + 11, 241, 238, 154, 0x020617, 0.6).setDepth(7);
-    this.add.rectangle(BASE_WIDTH / 2, 228, 238, 154, 0x7089a8, 0.32).setStrokeStyle(10, 0xf3fbff, 0.98).setDepth(8);
-    this.add.rectangle(BASE_WIDTH / 2, 228, 213, 129, 0x9ec6d9, 0.1).setStrokeStyle(2, 0xc9f4ff, 0.38).setDepth(8);
-    const reflection = this.add.graphics().setDepth(8);
-    reflection.fillStyle(0xffffff, 0.13);
-    reflection.fillTriangle(BASE_WIDTH / 2 - 104, 168, BASE_WIDTH / 2 - 36, 168, BASE_WIDTH / 2 - 94, 285);
-    reflection.fillStyle(0xffffff, 0.06);
-    reflection.fillTriangle(BASE_WIDTH / 2 + 34, 168, BASE_WIDTH / 2 + 102, 168, BASE_WIDTH / 2 + 72, 286);
-    this.add.rectangle(BASE_WIDTH / 2, 252, 72, 48, 0xffffff, 0).setStrokeStyle(6, 0xff6b64).setDepth(9);
-    this.add.ellipse(BASE_WIDTH / 2, 313, 121, 31, 0x2a0b06, 0.42).setDepth(11);
-    this.rearRim = this.add.graphics().setDepth(12);
-    this.rearRim.lineStyle(12, 0xd7431b, 1);
-    this.rearRim.strokeEllipse(BASE_WIDTH / 2, 307, 116, 27);
-
-    // The ball drops behind these net strands and the front half of the rim.
-    this.net = this.add.graphics().setDepth(20);
+    this.add.image(BASE_WIDTH / 2, 280, "premiumHoop").setDisplaySize(360, 240).setDepth(20);
+    // Keep the net-state model available for timing without drawing a second net over the illustrated goal.
+    this.net = this.add.graphics().setDepth(19).setAlpha(0);
     this.drawNetState("rest");
-    this.frontRim = this.add.graphics().setDepth(26);
-    this.frontRim.lineStyle(12, 0xff7130, 1);
-    this.frontRim.beginPath();
-    this.frontRim.moveTo(BASE_WIDTH / 2 - 58, 307);
-    for (let step = 1; step <= 20; step += 1) {
-      const angle = Math.PI - (Math.PI * step) / 20;
-      this.frontRim.lineTo(
-        BASE_WIDTH / 2 + Math.cos(angle) * 58,
-        307 + Math.sin(angle) * 13.5,
-      );
-    }
-    this.frontRim.strokePath();
   }
 
   getNetShape(state = "rest") {
@@ -285,13 +214,12 @@ export class LearnLettersScene extends Phaser.Scene {
   createBall() {
     this.ballShadow = this.add.ellipse(BASE_WIDTH / 2, 838, 188, 44, 0x000000, 0.34).setDepth(15);
     this.ball = this.add.container(BASE_WIDTH / 2, 748).setDepth(24);
-    this.ballSphere = this.add.image(0, 0, "basketballSphere").setDisplaySize(176, 176);
-    this.ballSeams = this.add.image(0, 0, "basketballSeams0").setDisplaySize(176, 176);
+    this.ballSphere = this.add.image(0, 0, "premiumBasketball").setDisplaySize(220, 220);
     this.ballLetter = this.add.text(0, 2, "A", {
       fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "68px", fontStyle: "bold",
       color: "#ffffff", stroke: "#7a2b17", strokeThickness: 9,
     }).setOrigin(0.5);
-    this.ball.add([this.ballSphere, this.ballSeams, this.ballLetter]);
+    this.ball.add([this.ballSphere, this.ballLetter]);
     this.spinFrame = 0;
     this.spinElapsed = 0;
     this.ball.setSize(180, 180).setInteractive({ useHandCursor: true });
@@ -303,8 +231,8 @@ export class LearnLettersScene extends Phaser.Scene {
     if (this.spinElapsed < 96) return;
     const steps = Math.max(1, Math.floor(this.spinElapsed / 96));
     this.spinElapsed %= 96;
-    this.spinFrame = (this.spinFrame - steps + BASKETBALL_SPIN_FRAMES * 2) % BASKETBALL_SPIN_FRAMES;
-    this.ballSeams.setTexture(`basketballSeams${this.spinFrame}`);
+    this.spinFrame -= steps;
+    this.ballSphere.setAngle(this.spinFrame * 7);
   }
 
   prepareRound() {
@@ -318,7 +246,7 @@ export class LearnLettersScene extends Phaser.Scene {
     this.ball.setPosition(BASE_WIDTH / 2, 748).setScale(1).setAlpha(1).setDepth(24);
     this.spinFrame = 0;
     this.spinElapsed = 0;
-    this.ballSeams.setTexture("basketballSeams0");
+    this.ballSphere.setAngle(0);
     this.ballLetter.setAngle(0);
     this.ballShadow.setPosition(BASE_WIDTH / 2, 838).setScale(1).setAlpha(0.34);
     this.drawNetState("rest");
@@ -333,20 +261,20 @@ export class LearnLettersScene extends Phaser.Scene {
     this.audioSystem.playEffect("tap");
     this.message.setText("Here it goes!");
     this.ball.setX(BASE_WIDTH / 2);
-    this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 760, ease: "Sine.Out" });
+    this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 900, ease: "Sine.Out" });
     const shot = { progress: 0 };
     let enteredHoop = false;
     this.tweens.add({
-      targets: shot, progress: 1, duration: 760, ease: "Linear",
+      targets: shot, progress: 1, duration: 900, ease: "Linear",
       onUpdate: () => {
         const t = shot.progress;
         const inverse = 1 - t;
         this.ball.x = BASE_WIDTH / 2;
         // One uninterrupted arc from the child's hand directly into the rim.
-        this.ball.y = inverse * inverse * 748 + 2 * inverse * t * 20 + t * t * 307;
+        this.ball.y = inverse * inverse * 748 + 2 * inverse * t * -240 + t * t * 307;
         this.ball.setScale(Phaser.Math.Linear(1, 0.5, t));
         this.advanceBallSpin(0.42);
-        if (!enteredHoop && t >= 0.82) {
+        if (!enteredHoop && t >= 0.92) {
           enteredHoop = true;
           this.ball.setDepth(18);
           this.animateNetState("open", 150);
