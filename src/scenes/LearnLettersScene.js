@@ -67,21 +67,18 @@ export class LearnLettersScene extends Phaser.Scene {
       stroke: "#7b2619", strokeThickness: 8, letterSpacing: 1,
       shadow: { offsetX: 0, offsetY: 4, color: "#000000", blur: 7, fill: true },
     }).setOrigin(0.5);
-    this.add.text(BASE_WIDTH / 2, 158, "Shoot • Swish • Learn", {
-      fontFamily: "Arial", fontSize: "17px", fontStyle: "bold", color: "#17365e",
-    }).setOrigin(0.5);
     ["LETTER", "LEARN", "STARS"].forEach((label, index) => {
-      this.add.text(140 + index * 130, 226, label, {
+      this.add.text(140 + index * 130, 218, label, {
         fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "12px", fontStyle: "bold", color: "#eef7ff",
       }).setOrigin(0.5);
     });
-    this.letterHud = this.add.text(140, 267, "A", {
+    this.letterHud = this.add.text(140, 259, "A", {
       fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "28px", fontStyle: "bold", color: "#ff5148",
     }).setOrigin(0.5);
-    this.add.text(270, 267, "ABC", {
+    this.add.text(270, 259, "ABC", {
       fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "22px", fontStyle: "bold", color: "#ffd43b",
     }).setOrigin(0.5);
-    this.coinText = this.add.text(400, 267, `⭐ ${this.coins}`, {
+    this.coinText = this.add.text(400, 259, `⭐ ${this.coins}`, {
       fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "21px", fontStyle: "bold", color: "#ffffff",
     }).setOrigin(0.5);
     this.messageButton = this.add.graphics().setDepth(60);
@@ -275,17 +272,17 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   createBall() {
-    this.ballShadow = this.add.ellipse(155, 838, 188, 44, 0x000000, 0.34).setDepth(15);
-    this.ball = this.add.container(155, 748).setDepth(24);
-    this.ballSphere = this.add.image(0, 0, "premiumBasketball").setDisplaySize(220, 220);
+    this.ballShadow = this.add.ellipse(BASE_WIDTH / 2, 844, 142, 34, 0x000000, 0.3).setDepth(15);
+    this.ball = this.add.container(BASE_WIDTH / 2, 770).setDepth(24);
+    this.ballSphere = this.add.image(0, 0, "premiumBasketball").setDisplaySize(160, 160);
     this.ballLetter = this.add.text(0, 2, "A", {
-      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "68px", fontStyle: "bold",
-      color: "#ffffff", stroke: "#7a2b17", strokeThickness: 9,
+      fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "52px", fontStyle: "bold",
+      color: "#ffffff", stroke: "#7a2b17", strokeThickness: 7,
     }).setOrigin(0.5);
     this.ball.add([this.ballSphere, this.ballLetter]);
     this.spinFrame = 0;
     this.spinElapsed = 0;
-    this.ball.setSize(180, 180).setInteractive({ useHandCursor: true });
+    this.ball.setSize(150, 150).setInteractive({ useHandCursor: true });
     this.ball.on("pointerdown", () => this.shoot());
   }
 
@@ -307,12 +304,12 @@ export class LearnLettersScene extends Phaser.Scene {
     this.letterHud.setText(letter);
     setBubbleLetter(this, letter, colors[index % colors.length]);
     this.letterContainer.setAlpha(0).setScale(0.08).setAngle(0);
-    this.ball.setPosition(155, 748).setScale(1).setAlpha(1).setDepth(24);
+    this.ball.setPosition(BASE_WIDTH / 2, 770).setScale(1).setAlpha(1).setDepth(24);
     this.spinFrame = 0;
     this.spinElapsed = 0;
     this.ballSphere.setAngle(0);
     this.ballLetter.setAngle(0);
-    this.ballShadow.setPosition(155, 838).setScale(1).setAlpha(0.34);
+    this.ballShadow.setPosition(BASE_WIDTH / 2, 844).setScale(1).setAlpha(0.3);
     this.drawNetState("rest");
     this.audioSystem.preloadLetters(letter, this.progression.getNextLetter());
     this.message.setText(`Tap the ${letter} ball!`);
@@ -324,7 +321,7 @@ export class LearnLettersScene extends Phaser.Scene {
     const letter = this.progression.getCurrentLetter();
     this.audioSystem.playEffect("tap");
     this.message.setText("Here it goes!");
-    this.ball.setX(155);
+    this.ball.setX(BASE_WIDTH / 2);
     this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 900, ease: "Sine.Out" });
     const shot = { progress: 0 };
     let enteredHoop = false;
@@ -333,9 +330,9 @@ export class LearnLettersScene extends Phaser.Scene {
       onUpdate: () => {
         const t = shot.progress;
         const inverse = 1 - t;
-        this.ball.x = inverse * inverse * 155 + 2 * inverse * t * 120 + t * t * (BASE_WIDTH / 2);
-        // One uninterrupted diagonal arc that stays clear of the hoop on ascent.
-        this.ball.y = inverse * inverse * 748 + 2 * inverse * t * -150 + t * t * 471;
+        // Curve away from center on ascent, then return over the rim from above.
+        this.ball.x = BASE_WIDTH / 2 - Math.sin(Math.PI * t) * 200;
+        this.ball.y = inverse * inverse * 770 + 2 * inverse * t * -150 + t * t * 471;
         this.ball.setScale(Phaser.Math.Linear(1, 0.5, t));
         this.advanceBallSpin(0.9);
         if (!enteredHoop && t >= 0.97) {
