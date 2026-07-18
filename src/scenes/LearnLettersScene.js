@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/gameConfig.js";
 import { createConfetti, createSparkles } from "../game/createConfetti.js";
+import { BASKETBALL_SPIN_FRAMES } from "../game/createBasketballTexture.js";
 import { createLetterEffects, setBubbleLetter } from "../game/createLetterEffects.js";
 import { ProgressionSystem } from "../systems/ProgressionSystem.js";
 import { SaveSystem } from "../systems/SaveSystem.js";
@@ -102,7 +103,7 @@ export class LearnLettersScene extends Phaser.Scene {
 
     // The ball drops behind these net strands and the front half of the rim.
     this.net = this.add.graphics().setDepth(20);
-    this.drawNetState("rest", 1);
+    this.drawNetState("rest");
     this.frontRim = this.add.graphics().setDepth(26);
     this.frontRim.lineStyle(9, 0xff6d31, 1);
     this.frontRim.beginPath();
@@ -110,61 +111,92 @@ export class LearnLettersScene extends Phaser.Scene {
     this.frontRim.strokePath();
   }
 
-  drawNetState(state = "rest", progress = 1) {
-    this.net.clear();
+  getNetShape(state = "rest") {
     const states = {
-      rest: { topWidth: 48, waistWidth: 25, bottomWidth: 22, bottom: 405 },
-      open: { topWidth: 55, waistWidth: 42, bottomWidth: 27, bottom: 414 },
-      stretch: { topWidth: 54, waistWidth: 48, bottomWidth: 18, bottom: 472 },
-      snap: { topWidth: 48, waistWidth: 18, bottomWidth: 28, bottom: 386 },
+      rest: { topWidth: 48, upperWidth: 35, waistWidth: 25, bottomWidth: 22, bottom: 405 },
+      open: { topWidth: 55, upperWidth: 50, waistWidth: 38, bottomWidth: 25, bottom: 416 },
+      expanded: { topWidth: 56, upperWidth: 54, waistWidth: 48, bottomWidth: 30, bottom: 435 },
+      stretch: { topWidth: 54, upperWidth: 50, waistWidth: 43, bottomWidth: 19, bottom: 478 },
+      narrow: { topWidth: 50, upperWidth: 38, waistWidth: 26, bottomWidth: 14, bottom: 456 },
+      snap: { topWidth: 48, upperWidth: 30, waistWidth: 17, bottomWidth: 27, bottom: 386 },
     };
-    const rest = states.rest;
-    const target = states[state] || rest;
-    const shape = {};
-    for (const key of Object.keys(rest)) shape[key] = Phaser.Math.Linear(rest[key], target[key], progress);
+    return { ...(states[state] || states.rest) };
+  }
+
+  drawNetState(state = "rest") {
+    this.netShape = this.getNetShape(state);
+    this.drawNetShape(this.netShape);
+  }
+
+  drawNetShape(shape) {
+    this.net.clear();
     const top = 315;
-    const mid = top + (shape.bottom - top) * 0.55;
-    this.net.lineStyle(3.5, 0xffffff, 0.96);
-    for (let i = -4; i <= 4; i += 1) {
-      const topX = BASE_WIDTH / 2 + (i / 4) * shape.topWidth;
-      const midX = BASE_WIDTH / 2 + (i / 4) * shape.waistWidth;
-      const bottomX = BASE_WIDTH / 2 + (i / 4) * shape.bottomWidth;
+    const upper = Phaser.Math.Linear(top, shape.bottom, 0.3);
+    const waist = Phaser.Math.Linear(top, shape.bottom, 0.67);
+    this.net.lineStyle(3, 0xffffff, 0.94);
+    for (let i = -5; i <= 5; i += 1) {
+      const ratio = i / 5;
       this.net.beginPath();
-      this.net.moveTo(topX, top);
-      this.net.lineTo(midX, mid);
-      this.net.lineTo(bottomX, shape.bottom);
+      this.net.moveTo(BASE_WIDTH / 2 + ratio * shape.topWidth, top);
+      this.net.lineTo(BASE_WIDTH / 2 + ratio * shape.upperWidth, upper);
+      this.net.lineTo(BASE_WIDTH / 2 + ratio * shape.waistWidth, waist);
+      this.net.lineTo(BASE_WIDTH / 2 + ratio * shape.bottomWidth, shape.bottom);
       this.net.strokePath();
     }
-    for (let row = 1; row <= 5; row += 1) {
-      const t = row / 6;
+    for (let row = 1; row <= 6; row += 1) {
+      const t = row / 7;
       const y = Phaser.Math.Linear(top, shape.bottom, t);
-      const width = t < 0.55
-        ? Phaser.Math.Linear(shape.topWidth, shape.waistWidth, t / 0.55)
-        : Phaser.Math.Linear(shape.waistWidth, shape.bottomWidth, (t - 0.55) / 0.45);
+      let width;
+      if (t < 0.3) width = Phaser.Math.Linear(shape.topWidth, shape.upperWidth, t / 0.3);
+      else if (t < 0.67) width = Phaser.Math.Linear(shape.upperWidth, shape.waistWidth, (t - 0.3) / 0.37);
+      else width = Phaser.Math.Linear(shape.waistWidth, shape.bottomWidth, (t - 0.67) / 0.33);
       this.net.lineBetween(BASE_WIDTH / 2 - width, y, BASE_WIDTH / 2 + width, y);
     }
   }
 
   animateNetState(state, duration, onComplete) {
+    const from = { ...(this.netShape || this.getNetShape("rest")) };
+    const to = this.getNetShape(state);
     const driver = { progress: 0 };
     this.tweens.add({
       targets: driver, progress: 1, duration, ease: "Sine.InOut",
-      onUpdate: () => this.drawNetState(state, driver.progress),
-      onComplete,
+      onUpdate: () => {
+        const shape = {};
+        for (const key of Object.keys(from)) shape[key] = Phaser.Math.Linear(from[key], to[key], driver.progress);
+        this.netShape = shape;
+        this.drawNetShape(shape);
+      },
+      onComplete: () => {
+        this.netShape = to;
+        this.drawNetShape(to);
+        onComplete?.();
+      },
     });
   }
 
   createBall() {
     this.ballShadow = this.add.ellipse(BASE_WIDTH / 2, 790, 180, 42, 0x000000, 0.28).setDepth(15);
     this.ball = this.add.container(BASE_WIDTH / 2, 690).setDepth(24);
-    this.ballImage = this.add.image(0, 0, "basketballHD").setDisplaySize(170, 170);
+    this.ballSphere = this.add.image(0, 0, "basketballSphere").setDisplaySize(170, 170);
+    this.ballSeams = this.add.image(0, 0, "basketballSeams0").setDisplaySize(170, 170);
     this.ballLetter = this.add.text(0, 2, "A", {
       fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "68px", fontStyle: "bold",
       color: "#ffffff", stroke: "#7a2b17", strokeThickness: 9,
     }).setOrigin(0.5);
-    this.ball.add([this.ballImage, this.ballLetter]);
+    this.ball.add([this.ballSphere, this.ballSeams, this.ballLetter]);
+    this.spinFrame = 0;
+    this.spinElapsed = 0;
     this.ball.setSize(180, 180).setInteractive({ useHandCursor: true });
     this.ball.on("pointerdown", () => this.shoot());
+  }
+
+  advanceBallSpin(speed = 1) {
+    this.spinElapsed += this.game.loop.delta * speed;
+    if (this.spinElapsed < 46) return;
+    const steps = Math.max(1, Math.floor(this.spinElapsed / 46));
+    this.spinElapsed %= 46;
+    this.spinFrame = (this.spinFrame - steps + BASKETBALL_SPIN_FRAMES * 2) % BASKETBALL_SPIN_FRAMES;
+    this.ballSeams.setTexture(`basketballSeams${this.spinFrame}`);
   }
 
   prepareRound() {
@@ -176,10 +208,12 @@ export class LearnLettersScene extends Phaser.Scene {
     setBubbleLetter(this, letter, colors[index % colors.length]);
     this.letterContainer.setAlpha(0).setScale(0.08).setAngle(0);
     this.ball.setPosition(BASE_WIDTH / 2, 690).setScale(1).setAlpha(1).setDepth(24);
-    this.ballImage.setAngle(0);
+    this.spinFrame = 0;
+    this.spinElapsed = 0;
+    this.ballSeams.setTexture("basketballSeams0");
     this.ballLetter.setAngle(0);
     this.ballShadow.setPosition(BASE_WIDTH / 2, 790).setScale(1).setAlpha(0.28);
-    this.drawNetState("rest", 1);
+    this.drawNetState("rest");
     this.audioSystem.preloadLetters(letter, this.progression.getNextLetter());
     this.message.setText(`Tap the ${letter} ball!`);
   }
@@ -196,18 +230,20 @@ export class LearnLettersScene extends Phaser.Scene {
       targets: this.ball, y: 150, scale: 0.56, duration: 720, ease: "Quad.Out",
       onUpdate: () => {
         this.ball.x = BASE_WIDTH / 2;
-        this.ballImage.angle -= 8;
+        this.advanceBallSpin(0.82);
       },
       onComplete: () => {
-        this.ball.setDepth(18);
-        this.time.delayedCall(335, () => this.animateNetState("open", 210));
-        this.tweens.add({
-          targets: this.ball, y: 307, scale: 0.52, duration: 610, ease: "Quad.In",
-          onUpdate: () => {
-            this.ball.x = BASE_WIDTH / 2;
-            this.ballImage.angle -= 8;
-          },
-          onComplete: () => this.swish(letter),
+        this.time.delayedCall(90, () => {
+          this.ball.setDepth(18);
+          this.time.delayedCall(315, () => this.animateNetState("open", 205));
+          this.tweens.add({
+            targets: this.ball, y: 307, scale: 0.52, duration: 610, ease: "Quad.In",
+            onUpdate: () => {
+              this.ball.x = BASE_WIDTH / 2;
+              this.advanceBallSpin(0.95);
+            },
+            onComplete: () => this.swish(letter),
+          });
         });
       },
     });
@@ -216,24 +252,38 @@ export class LearnLettersScene extends Phaser.Scene {
   swish(letter) {
     this.message.setText("SWISH!");
     this.audioSystem.playEffect("swish");
-    this.animateNetState("stretch", 260);
+    this.animateNetState("expanded", 105, () => this.animateNetState("stretch", 230));
     this.tweens.add({
-      targets: this.ball, y: 472, scale: 0.46, duration: 310, ease: "Quad.In",
+      targets: this.ball, y: 410, scale: 0.48, duration: 185, ease: "Quad.In",
       onUpdate: () => {
         this.ball.x = BASE_WIDTH / 2;
-        this.ballImage.angle -= 11;
+        this.advanceBallSpin(1.08);
       },
       onComplete: () => {
-        this.animateNetState("snap", 150, () => this.animateNetState("rest", 220));
         this.tweens.add({
-          targets: this.ball, y: 555, scale: 0.5, alpha: 0, duration: 260, ease: "Quad.In",
+          targets: this.ball, y: 478, scale: 0.46, duration: 190, ease: "Quad.In",
           onUpdate: () => {
             this.ball.x = BASE_WIDTH / 2;
-            this.ballImage.angle -= 12;
+            this.advanceBallSpin(1.15);
           },
           onComplete: () => {
-            this.cameras.main.shake(90, 0.002);
-            this.time.delayedCall(80, () => this.celebrate(letter));
+            this.ball.setDepth(22);
+            this.animateNetState("narrow", 145);
+            this.tweens.add({
+              targets: this.ball, y: 565, scale: 0.49, duration: 225, ease: "Quad.In",
+              onUpdate: () => this.advanceBallSpin(1.22),
+              onComplete: () => {
+                this.animateNetState("snap", 140, () => this.animateNetState("rest", 230));
+                this.tweens.add({
+                  targets: this.ball, y: 615, alpha: 0, duration: 150, ease: "Quad.In",
+                  onUpdate: () => this.advanceBallSpin(1.22),
+                  onComplete: () => {
+                    this.cameras.main.shake(70, 0.0015);
+                    this.time.delayedCall(65, () => this.celebrate(letter));
+                  },
+                });
+              },
+            });
           },
         });
       },
