@@ -13,7 +13,9 @@ export class LearnLettersScene extends Phaser.Scene {
   create() {
     this.locked = false;
     this.coins = SaveSystem.getCoins();
-    this.progression = new ProgressionSystem(SaveSystem.getLetterIndex());
+    this.activity = SaveSystem.getActivity();
+    const startIndex = this.activity === "numbers" ? SaveSystem.getNumberIndex() : SaveSystem.getLetterIndex();
+    this.progression = new ProgressionSystem(startIndex, this.activity);
     this.audioSystem = this.registry.get("audioSystem");
     this.drawArcade();
     this.createNeonLighting();
@@ -89,7 +91,7 @@ export class LearnLettersScene extends Phaser.Scene {
 
   createHUD() {
     this.add.image(BASE_WIDTH / 2, 120, "basketballLearningLogo").setDisplaySize(390, 195).setDepth(3);
-    ["LETTER", "LEARN", "STARS"].forEach((label, index) => {
+    [this.activity === "numbers" ? "NUMBER" : "LETTER", "LEARN", "STARS"].forEach((label, index) => {
       this.add.text(140 + index * 130, 218, label, {
         fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "12px", fontStyle: "bold", color: "#eef7ff",
       }).setOrigin(0.5);
@@ -97,7 +99,7 @@ export class LearnLettersScene extends Phaser.Scene {
     this.letterHud = this.add.text(140, 259, "A", {
       fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "28px", fontStyle: "bold", color: "#ff5148",
     }).setOrigin(0.5);
-    this.add.text(270, 259, "ABC", {
+    this.add.text(270, 259, this.activity === "numbers" ? "123" : "ABC", {
       fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "22px", fontStyle: "bold", color: "#ffd43b",
     }).setOrigin(0.5);
     this.coinText = this.add.text(400, 259, `⭐ ${this.coins}`, {
@@ -289,12 +291,14 @@ export class LearnLettersScene extends Phaser.Scene {
 
   prepareRound() {
     this.locked = false;
-    const letter = this.progression.getCurrentLetter();
+    const value = this.progression.getCurrentLetter();
     const index = this.progression.getCurrentIndex();
     const colors = ["#ff6b7a", "#4dabf7", "#ffd43b", "#69db7c", "#b197fc", "#ff922b", "#38d9a9", "#f06595"];
-    this.ballLetter.setText(letter);
-    this.letterHud.setText(letter);
-    setBubbleLetter(this, letter, colors[index % colors.length]);
+    this.ballLetter.setText(value).setFontSize(value.length > 1 ? 38 : 46);
+    this.letterHud.setText(value);
+    const revealSize = value.length > 1 ? 180 : 250;
+    [this.letterShadow, this.letterDepth, this.letter, this.letterHighlight].forEach((text) => text.setFontSize(revealSize));
+    setBubbleLetter(this, value, colors[index % colors.length]);
     this.letterContainer.setAlpha(0).setScale(0.08).setAngle(0);
     this.ball.setPosition(BASE_WIDTH / 2, 770).setScale(1).setAlpha(1).setDepth(24);
     this.spinFrame = 0;
@@ -303,22 +307,22 @@ export class LearnLettersScene extends Phaser.Scene {
     this.ballLetter.setAngle(0);
     this.ballShadow.setPosition(BASE_WIDTH / 2, 844).setScale(1).setAlpha(0.3);
     this.setNetState("rest");
-    this.audioSystem.preloadLetters(letter, this.progression.getNextLetter());
-    this.message.setText(`Tap the ${letter} ball!`);
+    if (this.activity === "letters") this.audioSystem.preloadLetters(value, this.progression.getNextLetter());
+    this.message.setText(`Tap the ${value} ball!`);
   }
 
   shoot() {
     if (this.locked) return;
     this.locked = true;
-    const letter = this.progression.getCurrentLetter();
+    const value = this.progression.getCurrentLetter();
     this.audioSystem.playEffect("tap");
     this.message.setText("Here it goes!");
     this.ball.setDepth(30);
     this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 750, ease: "Sine.Out" });
-    this.animateShotArc(letter);
+    this.animateShotArc(value);
   }
 
-  animateShotArc(letter) {
+  animateShotArc(value) {
     const start = { x: this.ball.x, y: this.ball.y, scale: this.ball.scaleX };
     const control = { x: BASE_WIDTH / 2 + 82, y: 90 };
     const rim = { x: BASE_WIDTH / 2, y: 471, scale: 0.7 };
@@ -344,12 +348,12 @@ export class LearnLettersScene extends Phaser.Scene {
         // downward through the rim, behind its front lip and the reacting net.
         this.ball.setPosition(rim.x, rim.y).setScale(rim.scale).setDepth(20);
         this.setNetState("open");
-        this.swish(letter);
+        this.swish(value);
       },
     });
   }
 
-  swish(letter) {
+  swish(value) {
     this.setNetState("stretch");
     // This is the exact downward rim crossing.
     this.message.setText("SWISH!");
@@ -381,7 +385,7 @@ export class LearnLettersScene extends Phaser.Scene {
                 this.tweens.add({
                   targets: this.ball, y: 720, alpha: 0, duration: 150, ease: "Quad.In",
                   onComplete: () => {
-                    this.time.delayedCall(65, () => this.celebrate(letter));
+                    this.time.delayedCall(65, () => this.celebrate(value));
                   },
                 });
               },
@@ -392,7 +396,7 @@ export class LearnLettersScene extends Phaser.Scene {
     });
   }
 
-  celebrate(letter) {
+  celebrate(value) {
     this.coins += 1;
     this.coinText.setText(`⭐ ${this.coins}`);
     SaveSystem.saveCoins(this.coins);
@@ -417,14 +421,18 @@ export class LearnLettersScene extends Phaser.Scene {
     });
     createConfetti(this);
     createSparkles(this);
-    this.time.delayedCall(120, () => this.audioSystem.playLetter(letter));
+    this.time.delayedCall(120, () => {
+      if (this.activity === "numbers") this.audioSystem.playNumber(value);
+      else this.audioSystem.playLetter(value);
+    });
     this.time.delayedCall(2200, () => {
       this.tweens.add({
         targets: [this.letterContainer, this.glow], alpha: 0, scale: 1.25, y: BASE_HEIGHT / 2 - 40, duration: 360,
         onComplete: () => {
           this.overlay.setVisible(false);
           this.progression.advance();
-          SaveSystem.saveLetterIndex(this.progression.getCurrentIndex());
+          if (this.activity === "numbers") SaveSystem.saveNumberIndex(this.progression.getCurrentIndex());
+          else SaveSystem.saveLetterIndex(this.progression.getCurrentIndex());
           this.prepareRound();
         },
       });
