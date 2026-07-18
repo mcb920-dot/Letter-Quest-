@@ -313,53 +313,67 @@ export class LearnLettersScene extends Phaser.Scene {
     const letter = this.progression.getCurrentLetter();
     this.audioSystem.playEffect("tap");
     this.message.setText("Here it goes!");
-    this.ball.setX(BASE_WIDTH / 2);
+    this.ball.setDepth(30);
     this.tweens.add({ targets: this.ballShadow, scaleX: 0.28, scaleY: 0.28, alpha: 0.035, duration: 750, ease: "Sine.Out" });
-    // A centered rise and drop keeps the ball above the rim and prevents lateral hook shots.
+    this.animateShotArc(letter);
+  }
+
+  animateShotArc(letter) {
+    const start = { x: this.ball.x, y: this.ball.y, scale: this.ball.scaleX };
+    const control = { x: BASE_WIDTH / 2 + 82, y: 90 };
+    const rim = { x: BASE_WIDTH / 2, y: 471, scale: 0.7 };
+    const driver = { progress: 0 };
+
     this.tweens.add({
-      targets: this.ball, x: BASE_WIDTH / 2, y: 365, scale: 0.72, duration: 470, ease: "Quad.Out",
-      onUpdate: () => this.advanceBallSpin(0.85),
+      targets: driver,
+      progress: 1,
+      duration: 710,
+      ease: "Linear",
+      onUpdate: () => {
+        const t = driver.progress;
+        const inverse = 1 - t;
+        this.ball.setPosition(
+          inverse * inverse * start.x + 2 * inverse * t * control.x + t * t * rim.x,
+          inverse * inverse * start.y + 2 * inverse * t * control.y + t * t * rim.y,
+        );
+        this.ball.setScale(Phaser.Math.Linear(start.scale, rim.scale, t));
+        this.advanceBallSpin(0.82);
+      },
       onComplete: () => {
+        // The ball has approached in front of the board and rim. It now crosses
+        // downward through the rim, behind its front lip and the reacting net.
+        this.ball.setPosition(rim.x, rim.y).setScale(rim.scale).setDepth(20);
         this.setNetState("open");
-        this.tweens.add({
-          targets: this.ball, x: BASE_WIDTH / 2, y: 471, scale: 0.7, duration: 240, ease: "Quad.In",
-          onUpdate: () => this.advanceBallSpin(0.7),
-          onComplete: () => this.swish(letter),
-        });
+        this.swish(letter);
       },
     });
   }
 
   swish(letter) {
-    let passedRim = false;
     this.setNetState("stretch");
-    this.time.delayedCall(145, () => {
-      this.message.setText("SWISH!");
-      this.audioSystem.playEffect("swish");
-      this.cameras.main.shake(65, 0.0014);
-    });
+    // This is the exact downward rim crossing.
+    this.message.setText("SWISH!");
+    this.audioSystem.playEffect("swish");
+    this.cameras.main.shake(65, 0.0014);
     this.tweens.add({
       targets: this.ball, y: 570, scale: 0.48, duration: 185, ease: "Quad.In",
       onUpdate: () => {
         this.ball.x = BASE_WIDTH / 2;
         this.advanceBallSpin(0.72);
-        if (!passedRim && this.ball.y >= 491) {
-          passedRim = true;
-          // Only move behind the illustrated net after the ball has crossed the front rim.
-          this.ball.setDepth(18);
-        }
       },
       onComplete: () => {
+        // Bring it in front of the net again once it has cleared the net opening,
+        // keeping the ball visible briefly beneath the basket.
+        this.ball.setDepth(24);
         this.tweens.add({
-          targets: this.ball, y: 615, scale: 0.46, duration: 190, ease: "Quad.In",
+          targets: this.ball, y: 625, scale: 0.5, duration: 190, ease: "Quad.In",
           onUpdate: () => {
             this.ball.x = BASE_WIDTH / 2;
             this.advanceBallSpin(0.55);
           },
           onComplete: () => {
-            this.ball.setDepth(22);
             this.tweens.add({
-              targets: this.ball, y: 675, scale: 0.49, duration: 225, ease: "Quad.In",
+              targets: this.ball, y: 682, scale: 0.52, duration: 225, ease: "Quad.In",
               onUpdate: () => this.advanceBallSpin(0.3),
               onComplete: () => {
                 this.setNetState("snap");
