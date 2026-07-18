@@ -125,10 +125,35 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   createHoop() {
-    this.add.image(BASE_WIDTH / 2, 280, "premiumHoop").setDisplaySize(360, 240).setDepth(20);
-    // Keep the net-state model available for timing without drawing a second net over the illustrated goal.
-    this.net = this.add.graphics().setDepth(19).setAlpha(0);
+    this.add.image(BASE_WIDTH / 2, 285, "softGlow").setDisplaySize(360, 360).setTint(0x69dcff).setAlpha(0.12).setDepth(2);
+    this.add.rectangle(BASE_WIDTH / 2 + 11, 241, 238, 154, 0x020617, 0.42).setDepth(7);
+    this.add.rectangle(BASE_WIDTH / 2, 228, 238, 154, 0x7089a8, 0.28).setStrokeStyle(10, 0xf3fbff, 0.98).setDepth(8);
+    this.add.rectangle(BASE_WIDTH / 2, 228, 213, 129, 0x9ec6d9, 0.08).setStrokeStyle(2, 0xc9f4ff, 0.38).setDepth(8);
+    const reflection = this.add.graphics().setDepth(8);
+    reflection.fillStyle(0xffffff, 0.1);
+    reflection.fillTriangle(BASE_WIDTH / 2 - 104, 168, BASE_WIDTH / 2 - 36, 168, BASE_WIDTH / 2 - 94, 285);
+    reflection.fillStyle(0xffffff, 0.05);
+    reflection.fillTriangle(BASE_WIDTH / 2 + 34, 168, BASE_WIDTH / 2 + 102, 168, BASE_WIDTH / 2 + 72, 286);
+    this.add.rectangle(BASE_WIDTH / 2, 252, 72, 48, 0xffffff, 0).setStrokeStyle(6, 0xff6b64).setDepth(9);
+    this.add.ellipse(BASE_WIDTH / 2, 313, 121, 31, 0x2a0b06, 0.32).setDepth(11);
+    this.rearRim = this.add.graphics().setDepth(12);
+    this.rearRim.lineStyle(12, 0xd7431b, 1);
+    this.rearRim.strokeEllipse(BASE_WIDTH / 2, 307, 116, 27);
+
+    this.net = this.add.graphics().setDepth(20);
     this.drawNetState("rest");
+    this.frontRim = this.add.graphics().setDepth(26);
+    this.frontRim.lineStyle(12, 0xff7130, 1);
+    this.frontRim.beginPath();
+    this.frontRim.moveTo(BASE_WIDTH / 2 - 58, 307);
+    for (let step = 1; step <= 20; step += 1) {
+      const angle = Math.PI - (Math.PI * step) / 20;
+      this.frontRim.lineTo(
+        BASE_WIDTH / 2 + Math.cos(angle) * 58,
+        307 + Math.sin(angle) * 13.5,
+      );
+    }
+    this.frontRim.strokePath();
   }
 
   getNetShape(state = "rest") {
