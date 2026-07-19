@@ -4,6 +4,7 @@ const NUMBER_PROGRESS_KEY = "basketballLearningNumberProgress";
 const MUTED_KEY = "letterQuestMuted";
 const THEME_KEY = "letterQuestTheme";
 const ACTIVITY_KEY = "basketballLearningActivity";
+const SHOT_MODE_KEY = "basketballLearningShotMode";
 const THEMES = ["open-court", "classic-arcade", "pup-arcade"];
 
 function readNumber(key, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
@@ -102,6 +103,23 @@ export const SaveSystem = {
   saveActivity(activity) {
     try {
       window.localStorage.setItem(ACTIVITY_KEY, activity === "numbers" ? "numbers" : "letters");
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  getShotMode() {
+    try {
+      return window.localStorage.getItem(SHOT_MODE_KEY) === "manual" ? "manual" : "automatic";
+    } catch {
+      return "automatic";
+    }
+  },
+
+  saveShotMode(mode) {
+    try {
+      window.localStorage.setItem(SHOT_MODE_KEY, mode === "manual" ? "manual" : "automatic");
       return true;
     } catch {
       return false;

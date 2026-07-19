@@ -4,6 +4,7 @@ import { createConfetti, createSparkles } from "../game/createConfetti.js";
 import { createLetterEffects, setBubbleLetter } from "../game/createLetterEffects.js";
 import { ProgressionSystem } from "../systems/ProgressionSystem.js";
 import { SaveSystem } from "../systems/SaveSystem.js";
+import { ManualShootingSystem } from "../systems/ManualShootingSystem.js";
 
 export class LearnLettersScene extends Phaser.Scene {
   constructor() {
@@ -14,6 +15,7 @@ export class LearnLettersScene extends Phaser.Scene {
     this.locked = false;
     this.coins = SaveSystem.getCoins();
     this.activity = SaveSystem.getActivity();
+    this.shotMode = SaveSystem.getShotMode();
     const startIndex = this.activity === "numbers" ? SaveSystem.getNumberIndex() : SaveSystem.getLetterIndex();
     this.progression = new ProgressionSystem(startIndex, this.activity);
     this.audioSystem = this.registry.get("audioSystem");
@@ -115,7 +117,8 @@ export class LearnLettersScene extends Phaser.Scene {
     this.messageButton.setInteractive(new Phaser.Geom.Rectangle(100, BASE_HEIGHT - 85, 340, 58), Phaser.Geom.Rectangle.Contains);
     this.messageButton.on("pointerdown", () => {
       this.tweens.add({ targets: [this.messageButton, this.message], scale: 0.97, duration: 70, yoyo: true });
-      this.shoot();
+      if (this.shotMode === "manual") this.selectManualBall();
+      else this.shoot();
     });
     this.message = this.add.text(BASE_WIDTH / 2, BASE_HEIGHT - 56, "Tap the basketball!", {
       fontFamily: "Arial Rounded MT Bold, Arial", fontSize: "21px", fontStyle: "bold", color: "#ffffff",
@@ -277,7 +280,69 @@ export class LearnLettersScene extends Phaser.Scene {
     this.spinFrame = 0;
     this.spinElapsed = 0;
     this.ball.setSize(138, 138).setInteractive({ useHandCursor: true });
-    this.ball.on("pointerdown", () => this.shoot());
+    if (this.shotMode === "manual") {
+      this.ball.on("pointerdown", () => this.selectManualBall());
+      this.manualShooting = new ManualShootingSystem(this, this.ball, {
+        onAimStart: () => this.message.setText("Pull back and let go!"),
+        onInvalidRelease: () => this.message.setText("Pull down a little farther!"),
+        onLaunch: () => {
+          this.locked = true;
+          this.message.setText("Nice shot!");
+          this.ball.setDepth(30);
+          this.tweens.add({ targets: this.ballShadow, scaleX: 0.3, scaleY: 0.3, alpha: 0.04, duration: 500 });
+        },
+        onFlightUpdate: () => {
+          this.ballShadow.x = this.ball.x;
+          this.advanceBallSpin(0.82);
+        },
+        onScore: () => this.completeManualBasket(),
+        onMiss: () => this.resetManualShot(),
+      }, { rimCenterX: BASE_WIDTH / 2, rimY: 471 });
+      this.manualShooting.disable();
+    } else {
+      this.ball.on("pointerdown", () => this.shoot());
+    }
+  }
+
+  selectManualBall() {
+    if (this.shotMode !== "manual" || this.locked) return;
+    this.audioSystem.unlock();
+    this.manualShooting.enable();
+    this.message.setText("Pull back and let go!");
+  }
+
+  completeManualBasket() {
+    const value = this.progression.getCurrentLetter();
+    this.ball.setPosition(BASE_WIDTH / 2, 471).setScale(0.7).setDepth(20);
+    this.setNetState("open");
+    this.swish(value);
+  }
+
+  resetManualShot() {
+    const value = this.progression.getCurrentLetter();
+    this.locked = true;
+    this.message.setText("Almost! Try again!");
+    this.audioSystem.speak("Almost! Try again!");
+    this.ball.setDepth(24);
+    this.tweens.add({
+      targets: this.ball,
+      x: BASE_WIDTH / 2,
+      y: 770,
+      scale: 1,
+      angle: 0,
+      duration: 360,
+      ease: "Back.Out",
+      onComplete: () => {
+        this.ballSphere.setAngle(0);
+        this.ballShadow.setPosition(BASE_WIDTH / 2, 844).setScale(1).setAlpha(0.3);
+        this.manualShooting.setOrigin(BASE_WIDTH / 2, 770);
+        this.manualShooting.reset();
+        this.locked = false;
+        this.time.delayedCall(450, () => {
+          if (!this.locked) this.message.setText(`Pull back and shoot the ${value} ball!`);
+        });
+      },
+    });
   }
 
   advanceBallSpin(speed = 1) {
@@ -307,12 +372,17 @@ export class LearnLettersScene extends Phaser.Scene {
     this.ballLetter.setAngle(0);
     this.ballShadow.setPosition(BASE_WIDTH / 2, 844).setScale(1).setAlpha(0.3);
     this.setNetState("rest");
+    if (this.manualShooting) {
+      this.manualShooting.setOrigin(BASE_WIDTH / 2, 770);
+      this.manualShooting.reset();
+      this.manualShooting.disable();
+    }
     if (this.activity === "letters") this.audioSystem.preloadLetters(value, this.progression.getNextLetter());
     this.message.setText(`Tap the ${value} ball!`);
   }
 
   shoot() {
-    if (this.locked) return;
+    if (this.locked || this.shotMode !== "automatic") return;
     this.locked = true;
     const value = this.progression.getCurrentLetter();
     this.audioSystem.playEffect("tap");

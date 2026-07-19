@@ -121,15 +121,54 @@ export class MenuScene extends Phaser.Scene {
 
     this.themeControls = COURTS.map((court, index) => this.createCourtCard(court, 99 + index * 171));
     this.updateCourtSelection();
+    this.createShotModePicker();
     const playLabel = activity === "letters" ? "PLAY LETTERS" : "PLAY NUMBERS";
-    this.addArcadeButton(BASE_WIDTH / 2, 820, 350, 74, playLabel, () => {
+    this.addArcadeButton(BASE_WIDTH / 2, 855, 350, 64, playLabel, () => {
       this.audioSystem.startMusic();
       this.cameras.main.flash(90, 255, 255, 255, false);
       this.time.delayedCall(75, () => this.scene.start("LearnLettersScene"));
     });
     this.addArcadeButton(66, 55, 74, 52, "‹", () => this.showActivityMenu(), 0x4b2a99);
-    this.addSoundControl();
+    this.addSoundControl(474, 55);
     this.sharpenText();
+  }
+
+  createShotModePicker() {
+    this.screen.add(this.add.text(BASE_WIDTH / 2, 738, "HOW DO YOU WANT TO PLAY?", {
+      fontFamily: FONT, fontSize: "14px", fontStyle: "bold", color: "#ffffff",
+      stroke: "#102a63", strokeThickness: 4,
+    }).setOrigin(0.5));
+    const choices = [
+      { key: "automatic", label: "TAP & SWISH", x: 150 },
+      { key: "manual", label: "AIM & SHOOT", x: 390 },
+    ];
+    this.shotModeControls = choices.map(({ key, label, x }) => {
+      const button = this.add.rectangle(x, 778, 210, 50, 0x102c67, 0.97)
+        .setStrokeStyle(3, 0x59dfff, 1)
+        .setInteractive({ useHandCursor: true });
+      const text = this.add.text(x, 778, label, {
+        fontFamily: FONT, fontSize: "14px", fontStyle: "bold", color: "#ffffff",
+      }).setOrigin(0.5);
+      button.on("pointerdown", () => {
+        this.audioSystem.unlock();
+        this.audioSystem.playEffect("tap");
+        SaveSystem.saveShotMode(key);
+        this.updateShotModePicker();
+      });
+      this.screen.add([button, text]);
+      return { key, button, text };
+    });
+    this.updateShotModePicker();
+  }
+
+  updateShotModePicker() {
+    const selected = SaveSystem.getShotMode();
+    for (const control of this.shotModeControls) {
+      const active = control.key === selected;
+      control.button.setFillStyle(active ? 0xff596f : 0x102c67, 1);
+      control.button.setStrokeStyle(active ? 4 : 3, active ? 0xffe49b : 0x59dfff, 1);
+      control.text.setColor(active ? "#ffffff" : "#d7f8ff");
+    }
   }
 
   sharpenText() {
@@ -165,11 +204,11 @@ export class MenuScene extends Phaser.Scene {
     }
   }
 
-  addSoundControl() {
-    const background = this.add.circle(BASE_WIDTH / 2, 895, 28, 0xffffff, 0.94)
+  addSoundControl(x = BASE_WIDTH / 2, y = 895) {
+    const background = this.add.circle(x, y, 28, 0xffffff, 0.94)
       .setStrokeStyle(3, 0x59dfff, 0.9)
       .setInteractive({ useHandCursor: true });
-    const label = this.add.text(BASE_WIDTH / 2, 895, this.audioSystem.isMuted() ? "🔇" : "🔊", {
+    const label = this.add.text(x, y, this.audioSystem.isMuted() ? "🔇" : "🔊", {
       fontFamily: "Arial", fontSize: "21px", color: "#111735",
     }).setOrigin(0.5);
     background.on("pointerdown", () => {
