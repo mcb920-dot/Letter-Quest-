@@ -140,7 +140,7 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5));
     const choices = [
       { key: "automatic", label: "TAP & SWISH", x: 150 },
-      { key: "manual", label: "AIM & SHOOT", x: 390 },
+      { key: "manual", label: "SWIPE & SHOOT", x: 390 },
     ];
     this.shotModeControls = choices.map(({ key, label, x }) => {
       const button = this.add.rectangle(x, 778, 210, 50, 0x102c67, 0.97)

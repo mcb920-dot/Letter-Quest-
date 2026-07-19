@@ -1,13 +1,13 @@
 const DEFAULTS = {
   gravity: 1050,
-  maxDrag: 125,
-  minimumDrag: 24,
-  horizontalPower: 4.2,
-  verticalPower: 7.2,
+  maxDrag: 155,
+  minimumDrag: 28,
+  horizontalPower: 1.35,
+  verticalPower: 7.5,
   minimumLift: 900,
   maximumLift: 1050,
   maximumHorizontalSpeed: 420,
-  rimHalfWidth: 68,
+  rimHalfWidth: 76,
   rimY: 471,
   boundsPadding: 120,
 };
@@ -16,8 +16,8 @@ const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, v
 
 export function calculateLaunchVelocity(origin, pointer, options = {}) {
   const settings = { ...DEFAULTS, ...options };
-  let dragX = origin.x - pointer.x;
-  let dragY = origin.y - pointer.y;
+  let dragX = pointer.x - origin.x;
+  let dragY = pointer.y - origin.y;
   const distance = Math.hypot(dragX, dragY);
   if (distance > settings.maxDrag) {
     const scale = settings.maxDrag / distance;
@@ -25,11 +25,11 @@ export function calculateLaunchVelocity(origin, pointer, options = {}) {
     dragY *= scale;
   }
 
-  if (distance < settings.minimumDrag || dragY > -12) return null;
+  if (distance < settings.minimumDrag || dragY > -18) return null;
   const upwardStrength = clamp(-dragY * settings.verticalPower, settings.minimumLift, settings.maximumLift);
   const horizontalStrength = clamp(dragX * settings.horizontalPower, -settings.maximumHorizontalSpeed, settings.maximumHorizontalSpeed);
   return {
-    x: horizontalStrength * 0.2,
+    x: horizontalStrength,
     y: -upwardStrength,
     dragDistance: Math.min(distance, settings.maxDrag),
   };
@@ -106,7 +106,9 @@ export class ManualShootingSystem {
     const dy = this.pointer.y - this.origin.y;
     const distance = Math.hypot(dx, dy);
     const scale = distance > this.options.maxDrag ? this.options.maxDrag / distance : 1;
-    this.ball.setPosition(this.origin.x + dx * scale * 0.34, this.origin.y + dy * scale * 0.34);
+    // The ball follows the child's finger slightly in the same direction,
+    // making this a forward swipe rather than a reverse slingshot pull.
+    this.ball.setPosition(this.origin.x + dx * scale * 0.14, this.origin.y + dy * scale * 0.14);
     this.drawGuide(this.pointer);
   }
 
@@ -160,11 +162,11 @@ export class ManualShootingSystem {
     let position = { ...this.origin };
     let previewVelocity = { x: velocity.x, y: velocity.y };
     this.guide.lineStyle(2, 0xffffff, 0.24);
-    for (let index = 1; index <= 13; index += 1) {
-      const next = stepProjectile(position, previewVelocity, 0.055, this.options.gravity);
+    for (let index = 1; index <= 20; index += 1) {
+      const next = stepProjectile(position, previewVelocity, 0.045, this.options.gravity);
       position = next.position;
       previewVelocity = next.velocity;
-      const alpha = 0.62 - index * 0.035;
+      const alpha = 0.72 - index * 0.027;
       this.guide.fillStyle(index % 2 === 0 ? 0xffd84f : 0xffffff, Math.max(0.12, alpha));
       this.guide.fillCircle(position.x, position.y, Math.max(2, 5 - index * 0.18));
     }

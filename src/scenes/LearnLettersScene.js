@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/gameConfig.js";
-import { createConfetti, createSparkles } from "../game/createConfetti.js";
+import { createConfetti, createImpactBurst, createSparkles } from "../game/createConfetti.js";
 import { createLetterEffects, setBubbleLetter } from "../game/createLetterEffects.js";
 import { ProgressionSystem } from "../systems/ProgressionSystem.js";
 import { SaveSystem } from "../systems/SaveSystem.js";
@@ -166,7 +166,27 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   setNetState(state = "rest") {
-    this.net.setTexture(`${this.theme}-net-${state}`);
+    this.net.setTexture(`${this.theme}-net-${state}`).setAlpha(1);
+  }
+
+  transitionNetState(state, duration = 100, onComplete) {
+    const previous = this.net;
+    const next = this.add.image(previous.x, previous.y, `${this.theme}-net-${state}`)
+      .setDisplaySize(previous.displayWidth, previous.displayHeight)
+      .setDepth(previous.depth)
+      .setAlpha(0);
+    this.net = next;
+    this.tweens.add({ targets: previous, alpha: 0, duration, ease: "Sine.InOut" });
+    this.tweens.add({
+      targets: next,
+      alpha: 1,
+      duration,
+      ease: "Sine.InOut",
+      onComplete: () => {
+        previous.destroy();
+        onComplete?.();
+      },
+    });
   }
 
   getNetShape(state = "rest") {
@@ -283,8 +303,8 @@ export class LearnLettersScene extends Phaser.Scene {
     if (this.shotMode === "manual") {
       this.ball.on("pointerdown", () => this.selectManualBall());
       this.manualShooting = new ManualShootingSystem(this, this.ball, {
-        onAimStart: () => this.message.setText("Pull back and let go!"),
-        onInvalidRelease: () => this.message.setText("Pull down a little farther!"),
+        onAimStart: () => this.message.setText("Swipe toward the hoop!"),
+        onInvalidRelease: () => this.message.setText("Swipe up and let go!"),
         onLaunch: () => {
           this.locked = true;
           this.message.setText("Nice shot!");
@@ -308,13 +328,12 @@ export class LearnLettersScene extends Phaser.Scene {
     if (this.shotMode !== "manual" || this.locked) return;
     this.audioSystem.unlock();
     this.manualShooting.enable();
-    this.message.setText("Pull back and let go!");
+    this.message.setText("Swipe up and let go!");
   }
 
   completeManualBasket() {
     const value = this.progression.getCurrentLetter();
     this.ball.setPosition(BASE_WIDTH / 2, 471).setScale(0.7).setDepth(20);
-    this.setNetState("open");
     this.swish(value);
   }
 
@@ -339,7 +358,7 @@ export class LearnLettersScene extends Phaser.Scene {
         this.manualShooting.reset();
         this.locked = false;
         this.time.delayedCall(450, () => {
-          if (!this.locked) this.message.setText(`Pull back and shoot the ${value} ball!`);
+          if (!this.locked) this.message.setText(`Swipe the ${value} ball toward the hoop!`);
         });
       },
     });
@@ -417,14 +436,15 @@ export class LearnLettersScene extends Phaser.Scene {
         // The ball has approached in front of the board and rim. It now crosses
         // downward through the rim, behind its front lip and the reacting net.
         this.ball.setPosition(rim.x, rim.y).setScale(rim.scale).setDepth(20);
-        this.setNetState("open");
         this.swish(value);
       },
     });
   }
 
   swish(value) {
-    this.setNetState("stretch");
+    this.transitionNetState("open", 70, () => this.transitionNetState("stretch", 140));
+    this.time.delayedCall(310, () => this.transitionNetState("snap", 105));
+    this.time.delayedCall(455, () => this.transitionNetState("rest", 175));
     // This is the exact downward rim crossing.
     this.message.setText("SWISH!");
     this.audioSystem.playEffect("swish");
@@ -450,8 +470,6 @@ export class LearnLettersScene extends Phaser.Scene {
               targets: this.ball, y: 682, scale: 0.52, duration: 225, ease: "Quad.In",
               onUpdate: () => this.advanceBallSpin(0.3),
               onComplete: () => {
-                this.setNetState("snap");
-                this.time.delayedCall(150, () => this.setNetState("rest"));
                 this.tweens.add({
                   targets: this.ball, y: 720, alpha: 0, duration: 150, ease: "Quad.In",
                   onComplete: () => {
@@ -471,6 +489,8 @@ export class LearnLettersScene extends Phaser.Scene {
     this.coinText.setText(`⭐ ${this.coins}`);
     SaveSystem.saveCoins(this.coins);
     this.audioSystem.playEffect("celebration");
+    this.cameras.main.flash(150, 255, 226, 92, false);
+    this.cameras.main.shake(110, 0.0022);
     this.overlay.setVisible(true).setAlpha(0);
     this.tweens.add({ targets: this.overlay, alpha: 0.66, duration: 190 });
     this.glow.setAlpha(0).setScale(0.3);
@@ -478,7 +498,7 @@ export class LearnLettersScene extends Phaser.Scene {
     this.letterContainer.setPosition(BASE_WIDTH / 2, 332).setScale(0.08).setAlpha(1).setAngle(0);
     const swirl = { t: 0 };
     this.tweens.add({
-      targets: swirl, t: 1, duration: 920, ease: "Cubic.Out",
+      targets: swirl, t: 1, duration: 650, ease: "Back.Out",
       onUpdate: () => {
         const angle = swirl.t * Math.PI * 2;
         const radius = (1 - swirl.t) * 46;
@@ -490,6 +510,7 @@ export class LearnLettersScene extends Phaser.Scene {
       onComplete: () => this.tweens.add({ targets: this.letterContainer, scale: 1.11, duration: 135, yoyo: true, ease: "Back.Out" }),
     });
     createConfetti(this);
+    createImpactBurst(this);
     createSparkles(this);
     this.time.delayedCall(120, () => {
       if (this.activity === "numbers") this.audioSystem.playNumber(value);
