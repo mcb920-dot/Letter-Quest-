@@ -420,8 +420,8 @@ export class LearnLettersScene extends Phaser.Scene {
     this.tweens.add({
       targets: driver,
       progress: 1,
-      duration: 710,
-      ease: "Linear",
+      duration: 470,
+      ease: "Sine.InOut",
       onUpdate: () => {
         const t = driver.progress;
         const inverse = 1 - t;
@@ -442,15 +442,15 @@ export class LearnLettersScene extends Phaser.Scene {
   }
 
   swish(value) {
-    this.transitionNetState("open", 70, () => this.transitionNetState("stretch", 140));
-    this.time.delayedCall(310, () => this.transitionNetState("snap", 105));
-    this.time.delayedCall(455, () => this.transitionNetState("rest", 175));
+    this.transitionNetState("open", 45, () => this.transitionNetState("stretch", 75));
+    this.time.delayedCall(155, () => this.transitionNetState("snap", 75));
+    this.time.delayedCall(270, () => this.transitionNetState("rest", 115));
     // This is the exact downward rim crossing.
     this.message.setText("SWISH!");
     this.audioSystem.playEffect("swish");
     this.cameras.main.shake(65, 0.0014);
     this.tweens.add({
-      targets: this.ball, y: 570, scale: 0.48, duration: 185, ease: "Quad.In",
+      targets: this.ball, y: 570, scale: 0.53, duration: 105, ease: "Quad.In",
       onUpdate: () => {
         this.ball.x = BASE_WIDTH / 2;
         this.advanceBallSpin(0.72);
@@ -460,18 +460,18 @@ export class LearnLettersScene extends Phaser.Scene {
         // keeping the ball visible briefly beneath the basket.
         this.ball.setDepth(24);
         this.tweens.add({
-          targets: this.ball, y: 625, scale: 0.5, duration: 190, ease: "Quad.In",
+          targets: this.ball, y: 625, scale: 0.54, duration: 105, ease: "Linear",
           onUpdate: () => {
             this.ball.x = BASE_WIDTH / 2;
             this.advanceBallSpin(0.55);
           },
           onComplete: () => {
             this.tweens.add({
-              targets: this.ball, y: 682, scale: 0.52, duration: 225, ease: "Quad.In",
+              targets: this.ball, y: 682, scale: 0.55, duration: 125, ease: "Quad.In",
               onUpdate: () => this.advanceBallSpin(0.3),
               onComplete: () => {
                 this.tweens.add({
-                  targets: this.ball, y: 720, alpha: 0, duration: 150, ease: "Quad.In",
+                  targets: this.ball, y: 720, alpha: 0, duration: 85, ease: "Quad.In",
                   onComplete: () => {
                     this.time.delayedCall(65, () => this.celebrate(value));
                   },
