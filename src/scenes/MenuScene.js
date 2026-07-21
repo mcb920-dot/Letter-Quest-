@@ -67,9 +67,9 @@ export class MenuScene extends Phaser.Scene {
     this.clearScreen();
     this.addBackground("classic-arcade");
     this.addLogo(135, 500);
-    this.screen.add(this.add.text(BASE_WIDTH / 2, 270, "WHAT DO YOU WANT TO LEARN?", {
-      fontFamily: FONT, fontSize: "19px", fontStyle: "bold", color: "#ffffff",
-      stroke: "#102a63", strokeThickness: 5,
+    this.screen.add(this.add.text(BASE_WIDTH / 2, 270, "CHOOSE A GAME", {
+      fontFamily: FONT, fontSize: "23px", fontStyle: "bold", color: "#ffffff",
+      stroke: "#071a45", strokeThickness: 6,
     }).setOrigin(0.5));
 
     this.createActivityCard(150, "letters", "LETTERS", "A – Z", "A", "#ff6b65");
@@ -79,30 +79,56 @@ export class MenuScene extends Phaser.Scene {
   }
 
   createActivityCard(x, activity, title, subtitle, symbol, accent) {
-    const panel = this.addPanel(x, 525, 210, 400);
-    const preview = this.add.image(x, 475, activity === "letters" ? "open-court-background" : "pup-arcade-background")
-      .setDisplaySize(184, 270);
-    const veil = this.add.rectangle(x, 475, 184, 270, 0x09225a, 0.25);
-    const ball = this.add.image(x, 493, "premiumBasketball").setDisplaySize(126, 126);
-    const symbolText = this.add.text(x, 493, symbol, {
-      fontFamily: FONT, fontSize: activity === "letters" ? "52px" : "31px", fontStyle: "bold",
+    const shadow = this.add.graphics().fillStyle(0x000000, 0.48)
+      .fillRoundedRect(x - 105, 329, 210, 410, 24);
+    const frame = this.add.graphics().fillStyle(0x0b2d69, 1)
+      .lineStyle(4, activity === "letters" ? 0xff7a75 : 0xffd94a, 1)
+      .fillRoundedRect(x - 105, 320, 210, 410, 24)
+      .strokeRoundedRect(x - 105, 320, 210, 410, 24);
+    const preview = this.add.image(x, 493, activity === "letters" ? "open-court-background" : "pup-arcade-background")
+      .setDisplaySize(198, 352);
+    const previewMaskShape = this.make.graphics({ add: false }).fillStyle(0xffffff)
+      .fillRoundedRect(x - 99, 326, 198, 352, 19);
+    preview.setMask(previewMaskShape.createGeometryMask());
+    const veil = this.add.rectangle(x, 493, 198, 352, 0x061b4c, 0.15);
+    veil.setMask(preview.mask);
+    const lowerFade = this.add.rectangle(x, 626, 198, 86, 0x071d4d, 0.72);
+    lowerFade.setMask(preview.mask);
+    const ballGlow = this.add.circle(x, 500, 78, activity === "letters" ? 0x54dfff : 0xffd94a, 0.2)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const ball = this.add.image(x, 500, "premiumBasketball").setDisplaySize(142, 142);
+    const symbolText = this.add.text(x, 500, symbol, {
+      fontFamily: FONT, fontSize: activity === "letters" ? "57px" : "34px", fontStyle: "bold",
       color: "#ffffff", stroke: "#6f2819", strokeThickness: 7,
     }).setOrigin(0.5);
-    const titleText = this.add.text(x, 340, title, {
-      fontFamily: FONT, fontSize: "25px", fontStyle: "bold", color: accent,
-      stroke: "#071a45", strokeThickness: 5,
+    const titlePlate = this.add.graphics().fillStyle(activity === "letters" ? 0xc9364d : 0xb17800, 1)
+      .fillRoundedRect(x - 82, 303, 164, 48, 18);
+    const titleText = this.add.text(x, 327, title, {
+      fontFamily: FONT, fontSize: "22px", fontStyle: "bold", color: "#ffffff",
+      stroke: "#071a45", strokeThickness: 4,
     }).setOrigin(0.5);
-    const subtitleText = this.add.text(x, 683, subtitle, {
-      fontFamily: FONT, fontSize: "20px", fontStyle: "bold", color: "#ffffff",
+    const subtitlePlate = this.add.graphics().fillStyle(0x06183c, 0.9)
+      .fillRoundedRect(x - 72, 667, 144, 44, 16);
+    const subtitleText = this.add.text(x, 689, subtitle, {
+      fontFamily: FONT, fontSize: "19px", fontStyle: "bold", color: accent,
     }).setOrigin(0.5);
-    panel.setInteractive({ useHandCursor: true });
-    panel.on("pointerdown", () => {
+    const hitZone = this.add.zone(x, 525, 210, 410).setInteractive({ useHandCursor: true });
+    const animatedTargets = [frame, preview, veil, lowerFade, ballGlow, ball, symbolText, titlePlate, titleText, subtitlePlate, subtitleText];
+    hitZone.on("pointerover", () => this.tweens.add({ targets: [ball, ballGlow], scale: 1.05, duration: 130 }));
+    hitZone.on("pointerout", () => this.tweens.add({ targets: [ball, ballGlow], scale: 1, duration: 130 }));
+    hitZone.on("pointerdown", () => {
       this.audioSystem.unlock();
       this.audioSystem.playEffect("tap");
-      SaveSystem.saveActivity(activity);
-      this.showCourtMenu();
+      this.tweens.add({
+        targets: animatedTargets, scaleX: 0.97, scaleY: 0.97, duration: 65, yoyo: true,
+        onComplete: () => {
+          SaveSystem.saveActivity(activity);
+          this.showCourtMenu();
+        },
+      });
     });
-    this.screen.add([preview, veil, ball, symbolText, titleText, subtitleText]);
+    this.tweens.add({ targets: [ball, ballGlow], y: "-=7", duration: 1050, yoyo: true, repeat: -1, ease: "Sine.InOut" });
+    this.screen.add([shadow, frame, preview, veil, lowerFade, ballGlow, ball, symbolText, titlePlate, titleText, subtitlePlate, subtitleText, hitZone]);
   }
 
   showCourtMenu() {
